@@ -40,7 +40,21 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- **Code Quality**: Plan identifies affected ownership boundaries, existing
+  patterns to follow, required lint/format/static checks, and any new
+  abstraction with its justification.
+- **Testing Standards**: Plan defines automated tests for acceptance scenarios,
+  business rules, regressions, and any integration or end-to-end paths crossing
+  module, service, persistence, or UI boundaries.
+- **User Experience Consistency**: Plan documents affected user journeys and
+  applicable loading, empty, validation, success, failure, accessibility, and
+  visual/language consistency requirements.
+- **Performance Requirements**: Plan states measurable performance budgets or
+  why none apply, plus validation steps for latency, rendering, memory, data
+  volume, startup, or background-work impact.
+- **Exceptions**: Any principle violation is recorded in Complexity Tracking
+  with rationale, simpler alternative considered, mitigation, owner, and review
+  date.
 
 ## Project Structure
 
