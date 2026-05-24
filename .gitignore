@@ -1,0 +1,17 @@
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+.vscode/
+.idea/
+
+node_modules/
+dist/
+build/
+.svelte-kit/
+coverage/
+playwright-report/
+test-results/
+*.log
+.env*
+!.env.example

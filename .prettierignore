@@ -1,0 +1,15 @@
+node_modules/
+dist/
+build/
+coverage/
+.svelte-kit/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+playwright-report/
+test-results/
+.agents/
+.specify/
+AGENTS.md
+specs/001-ai-menu-ordering/plan.md
+specs/001-ai-menu-ordering/spec.md

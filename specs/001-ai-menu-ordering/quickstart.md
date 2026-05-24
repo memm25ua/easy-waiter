@@ -146,3 +146,18 @@ Minimum required coverage:
   seconds for normal demo data.
 - Staff dashboard receives new order updates within 5 seconds.
 - Menu review remains usable for at least 50 items.
+
+## Implementation Validation Notes
+
+- Manager menu import/review/publish flow is implemented at `/manager/menus`
+  and covered by `tests/e2e/manager-menu-import.spec.ts`.
+- Customer manual and AI-confirmed order flows are implemented at
+  `/table/DEMO-1` and covered by Playwright tests.
+- Staff order monitoring/status updates are implemented at `/manager/orders`
+  with order status transition unit coverage.
+- Owner workload analytics are implemented at `/manager/analytics` with unit
+  coverage for operational aggregation.
+- Responsive validation covers customer phone, staff tablet, and manager
+  desktop viewports in `tests/e2e/responsive.spec.ts`.
+- Scope review found no delivery, pickup, or payment routes in the app; the
+  README calls out those exclusions.

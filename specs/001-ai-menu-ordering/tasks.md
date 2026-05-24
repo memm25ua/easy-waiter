@@ -20,15 +20,15 @@ they fail before implementing the behavior.
 
 **Purpose**: Initialize the lean SvelteKit, Tailwind v4, Supabase, and test project structure.
 
-- [ ] T001 Initialize package metadata and npm scripts for SvelteKit, Supabase, Vitest, and Playwright in package.json
-- [ ] T002 Configure SvelteKit and Vite for the single web app in svelte.config.js and vite.config.ts
-- [ ] T003 Configure Tailwind CSS v4 import and global app styles in src/app.css
-- [ ] T004 Create root Svelte shell and HTML template in src/app.html, src/routes/+layout.svelte, and src/routes/+page.svelte
-- [ ] T005 [P] Configure TypeScript and app environment typing in tsconfig.json and src/app.d.ts
-- [ ] T006 [P] Configure Vitest setup and unit test folders in vitest.config.ts and tests/unit/
-- [ ] T007 [P] Configure Playwright browser tests and base URL in playwright.config.ts and tests/e2e/
-- [ ] T008 [P] Create local environment example for Supabase and AI keys in .env.example
-- [ ] T009 [P] Initialize Supabase local project folders in supabase/config.toml, supabase/migrations/, supabase/functions/, and supabase/seed.sql
+- [x] T001 Initialize package metadata and npm scripts for SvelteKit, Supabase, Vitest, and Playwright in package.json
+- [x] T002 Configure SvelteKit and Vite for the single web app in svelte.config.js and vite.config.ts
+- [x] T003 Configure Tailwind CSS v4 import and global app styles in src/app.css
+- [x] T004 Create root Svelte shell and HTML template in src/app.html, src/routes/+layout.svelte, and src/routes/+page.svelte
+- [x] T005 [P] Configure TypeScript and app environment typing in tsconfig.json and src/app.d.ts
+- [x] T006 [P] Configure Vitest setup and unit test folders in vitest.config.ts and tests/unit/
+- [x] T007 [P] Configure Playwright browser tests and base URL in playwright.config.ts and tests/e2e/
+- [x] T008 [P] Create local environment example for Supabase and AI keys in .env.example
+- [x] T009 [P] Initialize Supabase local project folders in supabase/config.toml, supabase/migrations/, supabase/functions/, and supabase/seed.sql
 
 ---
 
@@ -38,22 +38,22 @@ they fail before implementing the behavior.
 
 **CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T010 Create Supabase schema migration for restaurants, locations, staff_members, restaurant_tables, menu_imports, menus, menu_sections, menu_items, menu_item_options, menu_item_option_values, table_sessions, ai_conversations, ai_messages, cart_proposals, and orders in supabase/migrations/001_initial_schema.sql
-- [ ] T011 Add Supabase indexes, foreign keys, status checks, and updated_at triggers in supabase/migrations/001_initial_schema.sql
-- [ ] T012 Add Supabase private menu-imports storage bucket migration in supabase/migrations/002_storage.sql
-- [ ] T013 Add row level security policies for staff, table session, published menu, order, conversation, and service-role access in supabase/migrations/003_rls_policies.sql
-- [ ] T014 Create demo restaurant, location, staff, tables, table sessions, and sample published menu seed data in supabase/seed.sql
-- [ ] T015 Generate shared TypeScript domain types for restaurant, menu, table session, AI conversation, cart, and order entities in src/lib/types.ts
-- [ ] T016 Implement Supabase browser, server, and service-role client helpers in src/lib/server/supabase.ts and src/lib/supabase.ts
-- [ ] T017 Implement SvelteKit Supabase session loading and staff auth guard helpers in src/hooks.server.ts and src/lib/server/auth.ts
-- [ ] T018 [P] Implement order status transition rules in src/lib/order-status.ts
-- [ ] T019 [P] Implement cart validation, option validation, unavailable item blocking, and total calculation helpers in src/lib/cart.ts
-- [ ] T020 [P] Implement shared money, date, and table label formatters in src/lib/format.ts
-- [ ] T021 [P] Add unit tests for order status transitions in tests/unit/order-status.test.ts
-- [ ] T022 [P] Add unit tests for cart validation and unavailable item blocking in tests/unit/cart.test.ts
-- [ ] T023 Add integration test for staff access and table session access policies in tests/integration/supabase-access.test.ts
-- [ ] T024 Add base responsive app navigation and auth-aware routing layout in src/routes/+layout.server.ts and src/routes/+layout.svelte
-- [ ] T025 Add manager route protection and assigned location loader in src/routes/manager/+layout.server.ts and src/routes/manager/+layout.svelte
+- [x] T010 Create Supabase schema migration for restaurants, locations, staff_members, restaurant_tables, menu_imports, menus, menu_sections, menu_items, menu_item_options, menu_item_option_values, table_sessions, ai_conversations, ai_messages, cart_proposals, and orders in supabase/migrations/001_initial_schema.sql
+- [x] T011 Add Supabase indexes, foreign keys, status checks, and updated_at triggers in supabase/migrations/001_initial_schema.sql
+- [x] T012 Add Supabase private menu-imports storage bucket migration in supabase/migrations/002_storage.sql
+- [x] T013 Add row level security policies for staff, table session, published menu, order, conversation, and service-role access in supabase/migrations/003_rls_policies.sql
+- [x] T014 Create demo restaurant, location, staff, tables, table sessions, and sample published menu seed data in supabase/seed.sql
+- [x] T015 Generate shared TypeScript domain types for restaurant, menu, table session, AI conversation, cart, and order entities in src/lib/types.ts
+- [x] T016 Implement Supabase browser, server, and service-role client helpers in src/lib/server/supabase.ts and src/lib/supabase.ts
+- [x] T017 Implement SvelteKit Supabase session loading and staff auth guard helpers in src/hooks.server.ts and src/lib/server/auth.ts
+- [x] T018 [P] Implement order status transition rules in src/lib/order-status.ts
+- [x] T019 [P] Implement cart validation, option validation, unavailable item blocking, and total calculation helpers in src/lib/cart.ts
+- [x] T020 [P] Implement shared money, date, and table label formatters in src/lib/format.ts
+- [x] T021 [P] Add unit tests for order status transitions in tests/unit/order-status.test.ts
+- [x] T022 [P] Add unit tests for cart validation and unavailable item blocking in tests/unit/cart.test.ts
+- [x] T023 Add integration test for staff access and table session access policies in tests/integration/supabase-access.test.ts
+- [x] T024 Add base responsive app navigation and auth-aware routing layout in src/routes/+layout.server.ts and src/routes/+layout.svelte
+- [x] T025 Add manager route protection and assigned location loader in src/routes/manager/+layout.server.ts and src/routes/manager/+layout.svelte
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel where dependencies allow.
 
@@ -67,22 +67,22 @@ they fail before implementing the behavior.
 
 ### Tests for User Story 1
 
-- [ ] T026 [P] [US1] Add menu import contract test for creating a draft with confidence flags in tests/integration/menu-import.test.ts
-- [ ] T027 [P] [US1] Add menu publish gate unit tests for unresolved flags, required fields, and price validation in tests/unit/menu-publish.test.ts
-- [ ] T028 [P] [US1] Add Playwright test for manager menu upload, review, suggestion edit, and publish flow in tests/e2e/manager-menu-import.spec.ts
+- [x] T026 [P] [US1] Add menu import contract test for creating a draft with confidence flags in tests/integration/menu-import.test.ts
+- [x] T027 [P] [US1] Add menu publish gate unit tests for unresolved flags, required fields, and price validation in tests/unit/menu-publish.test.ts
+- [x] T028 [P] [US1] Add Playwright test for manager menu upload, review, suggestion edit, and publish flow in tests/e2e/manager-menu-import.spec.ts
 
 ### Implementation for User Story 1
 
-- [ ] T029 [US1] Create menu import Edge Function scaffold and request validation in supabase/functions/import-menu/index.ts
-- [ ] T030 [US1] Implement menu import server helper for upload records, draft menu creation, confidence flags, and suggestions in src/lib/server/menu-import.ts
-- [ ] T031 [US1] Create manager menu list loader and upload action in src/routes/manager/menus/+page.server.ts
-- [ ] T032 [US1] Build manager menu list, upload, processing, failed, and empty states in src/routes/manager/menus/+page.svelte
-- [ ] T033 [US1] Create menu review loader and save/publish actions in src/routes/manager/menus/[menuId]/+page.server.ts
-- [ ] T034 [US1] Build menu review editor for sections, items, prices, options, flags, and AI suggestions in src/routes/manager/menus/[menuId]/+page.svelte
-- [ ] T035 [US1] Create reusable manager menu editor components in src/lib/components/manager/MenuSectionEditor.svelte and src/lib/components/manager/MenuItemEditor.svelte
-- [ ] T036 [US1] Add item availability toggle handling in src/routes/manager/menus/[menuId]/+page.server.ts
-- [ ] T037 [US1] Add published menu read model helper for customer and AI usage in src/lib/server/menu.ts
-- [ ] T038 [US1] Validate US1 quickstart menu import pass criteria manually and record notes in specs/001-ai-menu-ordering/quickstart.md
+- [x] T029 [US1] Create menu import Edge Function scaffold and request validation in supabase/functions/import-menu/index.ts
+- [x] T030 [US1] Implement menu import server helper for upload records, draft menu creation, confidence flags, and suggestions in src/lib/server/menu-import.ts
+- [x] T031 [US1] Create manager menu list loader and upload action in src/routes/manager/menus/+page.server.ts
+- [x] T032 [US1] Build manager menu list, upload, processing, failed, and empty states in src/routes/manager/menus/+page.svelte
+- [x] T033 [US1] Create menu review loader and save/publish actions in src/routes/manager/menus/[menuId]/+page.server.ts
+- [x] T034 [US1] Build menu review editor for sections, items, prices, options, flags, and AI suggestions in src/routes/manager/menus/[menuId]/+page.svelte
+- [x] T035 [US1] Create reusable manager menu editor components in src/lib/components/manager/MenuSectionEditor.svelte and src/lib/components/manager/MenuItemEditor.svelte
+- [x] T036 [US1] Add item availability toggle handling in src/routes/manager/menus/[menuId]/+page.server.ts
+- [x] T037 [US1] Add published menu read model helper for customer and AI usage in src/lib/server/menu.ts
+- [x] T038 [US1] Validate US1 quickstart menu import pass criteria manually and record notes in specs/001-ai-menu-ordering/quickstart.md
 
 **Checkpoint**: User Story 1 is independently complete when a manager can import, review, improve, and publish a menu.
 
@@ -96,22 +96,22 @@ they fail before implementing the behavior.
 
 ### Tests for User Story 2
 
-- [ ] T039 [P] [US2] Add table session loader integration test for active, expired, and invalid sessions in tests/integration/table-session.test.ts
-- [ ] T040 [P] [US2] Add AI waiter action confirmation contract tests in tests/integration/ai-waiter.test.ts
-- [ ] T041 [P] [US2] Add Playwright test for customer manual table order flow in tests/e2e/customer-manual-order.spec.ts
-- [ ] T042 [P] [US2] Add Playwright test for customer AI-assisted order confirmation flow in tests/e2e/customer-ai-order.spec.ts
+- [x] T039 [P] [US2] Add table session loader integration test for active, expired, and invalid sessions in tests/integration/table-session.test.ts
+- [x] T040 [P] [US2] Add AI waiter action confirmation contract tests in tests/integration/ai-waiter.test.ts
+- [x] T041 [P] [US2] Add Playwright test for customer manual table order flow in tests/e2e/customer-manual-order.spec.ts
+- [x] T042 [P] [US2] Add Playwright test for customer AI-assisted order confirmation flow in tests/e2e/customer-ai-order.spec.ts
 
 ### Implementation for User Story 2
 
-- [ ] T043 [US2] Implement table session, published menu, cart proposal, and customer order server helpers in src/lib/server/table-session.ts
-- [ ] T044 [US2] Create table route loader and manual order actions in src/routes/table/[sessionCode]/+page.server.ts
-- [ ] T045 [US2] Build mobile-first customer menu, item detail, cart, confirmation, and order status UI in src/routes/table/[sessionCode]/+page.svelte
-- [ ] T046 [US2] Create customer menu and cart components in src/lib/components/customer/MenuBrowser.svelte and src/lib/components/customer/CartPanel.svelte
-- [ ] T047 [US2] Create AI waiter Edge Function scaffold with allowed and blocked action handling in supabase/functions/ai-waiter/index.ts
-- [ ] T048 [US2] Implement AI waiter server helper for conversation messages, menu context, cart proposals, escalation, and confirmed order submission in src/lib/server/ai.ts
-- [ ] T049 [US2] Build AI waiter chat, proposal review, escalation, and confirmation UI in src/lib/components/customer/AiWaiter.svelte
-- [ ] T050 [US2] Add customer order realtime subscription for submitted order status in src/lib/components/customer/OrderStatus.svelte
-- [ ] T051 [US2] Validate US2 quickstart manual and AI waiter order pass criteria manually and record notes in specs/001-ai-menu-ordering/quickstart.md
+- [x] T043 [US2] Implement table session, published menu, cart proposal, and customer order server helpers in src/lib/server/table-session.ts
+- [x] T044 [US2] Create table route loader and manual order actions in src/routes/table/[sessionCode]/+page.server.ts
+- [x] T045 [US2] Build mobile-first customer menu, item detail, cart, confirmation, and order status UI in src/routes/table/[sessionCode]/+page.svelte
+- [x] T046 [US2] Create customer menu and cart components in src/lib/components/customer/MenuBrowser.svelte and src/lib/components/customer/CartPanel.svelte
+- [x] T047 [US2] Create AI waiter Edge Function scaffold with allowed and blocked action handling in supabase/functions/ai-waiter/index.ts
+- [x] T048 [US2] Implement AI waiter server helper for conversation messages, menu context, cart proposals, escalation, and confirmed order submission in src/lib/server/ai.ts
+- [x] T049 [US2] Build AI waiter chat, proposal review, escalation, and confirmation UI in src/lib/components/customer/AiWaiter.svelte
+- [x] T050 [US2] Add customer order realtime subscription for submitted order status in src/lib/components/customer/OrderStatus.svelte
+- [x] T051 [US2] Validate US2 quickstart manual and AI waiter order pass criteria manually and record notes in specs/001-ai-menu-ordering/quickstart.md
 
 **Checkpoint**: User Story 2 is independently complete when a customer can submit manual and AI-confirmed orders from a valid table session.
 
@@ -125,20 +125,20 @@ they fail before implementing the behavior.
 
 ### Tests for User Story 3
 
-- [ ] T052 [P] [US3] Add order dashboard loader and status update integration tests in tests/integration/orders-dashboard.test.ts
-- [ ] T053 [P] [US3] Add Playwright test for staff dashboard realtime order and status update flow in tests/e2e/staff-orders.spec.ts
-- [ ] T054 [P] [US3] Add Playwright test for needs-attention and unavailable item dashboard states in tests/e2e/staff-order-issues.spec.ts
+- [x] T052 [P] [US3] Add order dashboard loader and status update integration tests in tests/integration/orders-dashboard.test.ts
+- [x] T053 [P] [US3] Add Playwright test for staff dashboard realtime order and status update flow in tests/e2e/staff-orders.spec.ts
+- [x] T054 [P] [US3] Add Playwright test for needs-attention and unavailable item dashboard states in tests/e2e/staff-order-issues.spec.ts
 
 ### Implementation for User Story 3
 
-- [ ] T055 [US3] Implement staff order query, needs-attention detection, and status update helpers in src/lib/server/orders.ts
-- [ ] T056 [US3] Create manager dashboard summary loader in src/routes/manager/+page.server.ts
-- [ ] T057 [US3] Build manager dashboard overview, active order cards, menu status, and table activity in src/routes/manager/+page.svelte
-- [ ] T058 [US3] Create orders dashboard loader and status update actions in src/routes/manager/orders/+page.server.ts
-- [ ] T059 [US3] Build staff orders board with new, accepted, preparing, ready, served, cancelled, and needs-attention lanes in src/routes/manager/orders/+page.svelte
-- [ ] T060 [US3] Create reusable staff order card and status controls in src/lib/components/staff/OrderCard.svelte and src/lib/components/staff/OrderStatusControls.svelte
-- [ ] T061 [US3] Add Supabase realtime order subscription and disconnected warning handling in src/lib/components/staff/OrdersRealtime.svelte
-- [ ] T062 [US3] Validate US3 quickstart staff dashboard pass criteria manually and record notes in specs/001-ai-menu-ordering/quickstart.md
+- [x] T055 [US3] Implement staff order query, needs-attention detection, and status update helpers in src/lib/server/orders.ts
+- [x] T056 [US3] Create manager dashboard summary loader in src/routes/manager/+page.server.ts
+- [x] T057 [US3] Build manager dashboard overview, active order cards, menu status, and table activity in src/routes/manager/+page.svelte
+- [x] T058 [US3] Create orders dashboard loader and status update actions in src/routes/manager/orders/+page.server.ts
+- [x] T059 [US3] Build staff orders board with new, accepted, preparing, ready, served, cancelled, and needs-attention lanes in src/routes/manager/orders/+page.svelte
+- [x] T060 [US3] Create reusable staff order card and status controls in src/lib/components/staff/OrderCard.svelte and src/lib/components/staff/OrderStatusControls.svelte
+- [x] T061 [US3] Add Supabase realtime order subscription and disconnected warning handling in src/lib/components/staff/OrdersRealtime.svelte
+- [x] T062 [US3] Validate US3 quickstart staff dashboard pass criteria manually and record notes in specs/001-ai-menu-ordering/quickstart.md
 
 **Checkpoint**: User Story 3 is independently complete when staff can monitor and update active orders reliably.
 
@@ -152,17 +152,17 @@ they fail before implementing the behavior.
 
 ### Tests for User Story 4
 
-- [ ] T063 [P] [US4] Add operational summary aggregation tests in tests/unit/operational-summary.test.ts
-- [ ] T064 [P] [US4] Add analytics loader integration test for selectable service periods in tests/integration/analytics.test.ts
-- [ ] T065 [P] [US4] Add Playwright test for owner analytics summary flow in tests/e2e/owner-analytics.spec.ts
+- [x] T063 [P] [US4] Add operational summary aggregation tests in tests/unit/operational-summary.test.ts
+- [x] T064 [P] [US4] Add analytics loader integration test for selectable service periods in tests/integration/analytics.test.ts
+- [x] T065 [P] [US4] Add Playwright test for owner analytics summary flow in tests/e2e/owner-analytics.spec.ts
 
 ### Implementation for User Story 4
 
-- [ ] T066 [US4] Implement operational summary aggregation helper in src/lib/server/analytics.ts
-- [ ] T067 [US4] Create analytics route loader with selectable service periods in src/routes/manager/analytics/+page.server.ts
-- [ ] T068 [US4] Build analytics summary UI for total orders, AI-assisted orders, manual orders, staff interventions, and average submission time in src/routes/manager/analytics/+page.svelte
-- [ ] T069 [US4] Create analytics metric components in src/lib/components/manager/MetricCard.svelte and src/lib/components/manager/ServicePeriodPicker.svelte
-- [ ] T070 [US4] Validate US4 owner workload reduction pass criteria manually and record notes in specs/001-ai-menu-ordering/quickstart.md
+- [x] T066 [US4] Implement operational summary aggregation helper in src/lib/server/analytics.ts
+- [x] T067 [US4] Create analytics route loader with selectable service periods in src/routes/manager/analytics/+page.server.ts
+- [x] T068 [US4] Build analytics summary UI for total orders, AI-assisted orders, manual orders, staff interventions, and average submission time in src/routes/manager/analytics/+page.svelte
+- [x] T069 [US4] Create analytics metric components in src/lib/components/manager/MetricCard.svelte and src/lib/components/manager/ServicePeriodPicker.svelte
+- [x] T070 [US4] Validate US4 owner workload reduction pass criteria manually and record notes in specs/001-ai-menu-ordering/quickstart.md
 
 **Checkpoint**: User Story 4 is independently complete when owners can inspect operational summaries for service periods.
 
@@ -172,14 +172,14 @@ they fail before implementing the behavior.
 
 **Purpose**: Verify quality gates, performance budgets, UX consistency, and POC readiness across all stories.
 
-- [ ] T071 [P] Add README setup and product validation overview in README.md
-- [ ] T072 [P] Add accessible loading, empty, validation, success, failure, unavailable-item, and AI escalation copy review in src/lib/components/
-- [ ] T073 [P] Add responsive visual pass for customer phone, staff tablet, and manager desktop layouts in tests/e2e/responsive.spec.ts
-- [ ] T074 Run formatting, linting, type checking, unit tests, integration tests, and Playwright tests from package.json
-- [ ] T075 Run Supabase migration reset and seed validation for supabase/config.toml, supabase/migrations/, and supabase/seed.sql with supabase db reset
-- [ ] T076 Validate performance budgets for customer feedback under 2 seconds, dashboard order visibility under 5 seconds, and 50-item menu review usability in specs/001-ai-menu-ordering/quickstart.md
-- [ ] T077 Review all routes for customer-facing jargon and staff-only data leakage in src/routes/
-- [ ] T078 Verify no remote delivery, pickup, or payment scope leaked into the POC in src/routes/ and specs/001-ai-menu-ordering/
+- [x] T071 [P] Add README setup and product validation overview in README.md
+- [x] T072 [P] Add accessible loading, empty, validation, success, failure, unavailable-item, and AI escalation copy review in src/lib/components/
+- [x] T073 [P] Add responsive visual pass for customer phone, staff tablet, and manager desktop layouts in tests/e2e/responsive.spec.ts
+- [x] T074 Run formatting, linting, type checking, unit tests, integration tests, and Playwright tests from package.json
+- [x] T075 Run Supabase migration reset and seed validation for supabase/config.toml, supabase/migrations/, and supabase/seed.sql with supabase db reset
+- [x] T076 Validate performance budgets for customer feedback under 2 seconds, dashboard order visibility under 5 seconds, and 50-item menu review usability in specs/001-ai-menu-ordering/quickstart.md
+- [x] T077 Review all routes for customer-facing jargon and staff-only data leakage in src/routes/
+- [x] T078 Verify no remote delivery, pickup, or payment scope leaked into the POC in src/routes/ and specs/001-ai-menu-ordering/
 
 ---
 
@@ -287,7 +287,7 @@ Task: "T065 [P] [US4] Add Playwright test for owner analytics summary flow in te
 
 ## Format Validation
 
-- All executable tasks use `- [ ] T###` checklist format.
+- All executable tasks use `- [X] T###` checklist format.
 - User story phase tasks include `[US1]`, `[US2]`, `[US3]`, or `[US4]`.
 - Setup, foundational, and polish tasks do not include user story labels.
 - Parallel tasks use `[P]` only when they touch separate files or can proceed independently.
