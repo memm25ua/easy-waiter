@@ -13,7 +13,10 @@
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
-    "test:e2e": "playwright test"
+    "test:rls": "vitest run tests/rls",
+    "test:e2e": "playwright test",
+    "test:smoke": "playwright test tests/e2e/production-smoke.spec.ts",
+    "validate:deployment": "npm run check && npm run test:unit && npm run test:integration && npm run test:rls && npm run build"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
@@ -22,6 +25,7 @@
   "devDependencies": {
     "@playwright/test": "^1.52.0",
     "@sveltejs/adapter-auto": "^6.0.0",
+    "@sveltejs/adapter-node": "^5.5.4",
     "@sveltejs/kit": "^2.21.0",
     "@sveltejs/vite-plugin-svelte": "^5.0.3",
     "@tailwindcss/vite": "^4.1.7",

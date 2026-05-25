@@ -32,3 +32,4 @@
 ## Notes
 
 - Provider-specific AI and deployment details should be documented during `/speckit-plan`, not in this product specification.
+- English and Spanish i18n scope is captured as a cross-cutting production requirement with no remaining clarification markers.

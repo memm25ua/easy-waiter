@@ -4,31 +4,35 @@
   import MenuBrowser from '$lib/components/customer/MenuBrowser.svelte';
   import OrderStatus from '$lib/components/customer/OrderStatus.svelte';
   let { data, form } = $props();
+  const d = $derived(data.dictionary);
+  const aiItem = $derived(data.menu?.sections.flatMap((section) => section.items).find((item) => item.isAvailable));
+  const aiOption = $derived(aiItem?.options[0]);
+  const aiValue = $derived(aiOption?.values.find((value) => value.isAvailable));
 </script>
 
 {#if !data.session || data.session.status !== 'active'}
   <main class="mx-auto max-w-lg px-4 py-10">
-    <h1 class="text-2xl font-semibold">This table session is not active</h1>
-    <p class="mt-2 text-stone-600">Ask staff for a fresh table code.</p>
+    <h1 class="ew-display text-3xl">{d['table.inactive.title']}</h1>
+    <p class="ew-muted mt-2">{d['table.inactive.body']}</p>
   </main>
 {:else if !data.menu}
   <main class="mx-auto max-w-lg px-4 py-10">
-    <h1 class="text-2xl font-semibold">No published menu yet</h1>
+    <h1 class="ew-display text-3xl">{d['table.noMenu']}</h1>
   </main>
 {:else}
   <main class="mx-auto grid max-w-6xl gap-6 px-4 py-6 lg:grid-cols-[1fr_22rem]">
     <section class="space-y-5">
       <div>
-        <p class="text-sm font-medium uppercase tracking-wide text-blue-700">{data.session.tableLabel}</p>
-        <h1 class="mt-1 text-3xl font-semibold tracking-tight">{data.menu.title}</h1>
+        <p class="ew-eyebrow">{data.session.tableLabel}</p>
+        <h1 class="ew-display mt-1 text-4xl">{data.menu.title}</h1>
       </div>
-      {#if form?.message}<p class="rounded border border-stone-200 bg-white p-3 text-sm">{form.message}</p>{/if}
-      <MenuBrowser menu={data.menu} />
+      {#if form?.message}<p class="ew-alert-info p-3 text-sm">{form.message}</p>{/if}
+      <MenuBrowser menu={data.menu} {d} />
     </section>
     <aside class="space-y-4">
-      <CartPanel menu={data.menu} />
-      <AiWaiter />
-      <OrderStatus orders={data.orders} />
+      <CartPanel menu={data.menu} {d} />
+      <AiWaiter defaultItem={aiItem?.id ?? ''} defaultOption={aiOption?.id ?? ''} defaultValue={aiValue?.id ?? ''} {d} />
+      <OrderStatus orders={data.orders} {d} />
     </aside>
   </main>
 {/if}

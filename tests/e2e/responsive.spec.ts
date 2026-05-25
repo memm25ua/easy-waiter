@@ -1,5 +1,10 @@
 import { expect, test } from "@playwright/test";
 
+test.skip(
+  !process.env.PUBLIC_SUPABASE_URL,
+  "Authenticated responsive flows require production test env.",
+);
+
 test("customer phone, staff tablet, and manager desktop layouts render", async ({
   page,
 }) => {

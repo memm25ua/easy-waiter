@@ -1,5 +1,10 @@
 import { expect, test } from "@playwright/test";
 
+test.skip(
+  !process.env.PUBLIC_SUPABASE_URL,
+  "Authenticated menu flow requires production test env.",
+);
+
 test("manager can review and publish a menu", async ({ page }) => {
   await page.goto("/manager/menus");
   await expect(page.getByRole("heading", { name: "Menus" })).toBeVisible();

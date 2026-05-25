@@ -19,7 +19,7 @@ export const actions: Actions = {
     const file = form.get("menuFile");
     if (!(file instanceof File) || file.size === 0)
       return fail(400, { message: "Choose a menu file." });
-    await createMenuImport(staff, file.name);
-    throw redirect(303, "/manager/menus/menu-demo");
+    const draft = await createMenuImport(staff, file.name);
+    throw redirect(303, `/manager/menus/${draft.menu.id}`);
   },
 };

@@ -1,29 +1,39 @@
 <script lang="ts">
   import '../app.css';
+  import LanguageSelector from '$lib/components/shared/LanguageSelector.svelte';
 
   let { children, data } = $props();
+  const d = $derived(data.dictionary);
 </script>
 
 <svelte:head>
   <title>Easy Waiter</title>
-  <meta
-    name="description"
-    content="Dine-in menu import, customer ordering, AI waiter, and staff order monitoring."
-  />
+  <meta name="description" content={d['app.description']} />
 </svelte:head>
 
-<div class="min-h-screen bg-stone-50 text-stone-950">
-  <header class="border-b border-stone-200 bg-white">
+<div class="ew-canvas min-h-screen">
+  <header class="border-b" style="border-color: var(--ew-hairline); background: var(--ew-canvas);">
     <nav class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-      <a href="/" class="text-lg font-semibold tracking-tight">Easy Waiter</a>
+      <a href="/" class="ew-display text-xl">Easy Waiter</a>
       <div class="flex items-center gap-2 text-sm">
-        <a class="rounded px-3 py-2 hover:bg-stone-100" href="/manager">Manager</a>
-        <a class="rounded px-3 py-2 hover:bg-stone-100" href="/table/DEMO-1">Demo table</a>
         {#if data?.staff}
-          <span class="hidden rounded bg-emerald-50 px-2 py-1 text-emerald-800 sm:inline"
-            >{data.staff.role}</span
-          >
+          <a class="rounded-md px-3 py-2 hover:bg-[var(--ew-surface-soft)]" href="/manager">{d['nav.dashboard']}</a>
+          <form method="post" action="/auth/sign-out">
+            <button class="rounded-md px-3 py-2 hover:bg-[var(--ew-surface-soft)]">{d['nav.signOut']}</button>
+          </form>
+        {:else}
+          <a class="rounded-md px-3 py-2 hover:bg-[var(--ew-surface-soft)]" href="/auth/sign-in">{d['nav.signIn']}</a>
+          <a class="ew-button-primary" href="/auth/sign-up">{d['nav.startSetup']}</a>
         {/if}
+        {#if data?.staff}
+          <span class="ew-pill hidden sm:inline">{data.staff.role}</span>
+        {/if}
+        <LanguageSelector
+          locale={data.locale}
+          label={d['language.label']}
+          english={d['language.en']}
+          spanish={d['language.es']}
+        />
       </div>
     </nav>
   </header>

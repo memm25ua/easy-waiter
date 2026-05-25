@@ -1,39 +1,46 @@
 <script lang="ts">
   import type { Menu, MenuItem, MenuSection } from '$lib/types';
 
-  let { menu } = $props<{ menu: Menu }>();
+  let { menu, d } = $props<{ menu: Menu; d: Record<string, string> }>();
   const items = $derived(
     menu.sections
       .flatMap((section: MenuSection) => section.items)
       .filter((item: MenuItem) => item.isAvailable)
   );
+  const firstOption = $derived(items[0]?.options[0] ?? null);
 </script>
 
-<form method="post" action="?/order" class="rounded border border-stone-200 bg-white p-4">
-  <h3 class="font-semibold">Order now</h3>
+<form method="post" action="?/order" class="ew-panel p-4">
+  <h3 class="font-semibold">{d['table.orderNow']}</h3>
   <label class="mt-3 grid gap-1 text-sm">
-    <span>Item</span>
-    <select class="rounded border border-stone-300 px-3 py-2" name="itemId">
+    <span>{d['table.item']}</span>
+    <select class="ew-input" name="itemId">
       {#each items as item}
         <option value={item.id}>{item.name}</option>
       {/each}
     </select>
   </label>
+  {#if firstOption}
+    <input type="hidden" name="optionId" value={firstOption.id} />
+    <label class="mt-3 grid gap-1 text-sm">
+      <span>{firstOption.name}</span>
+      <select class="ew-input" name="optionValueId">
+        {#if !firstOption.isRequired}<option value="">No selection</option>{/if}
+        {#each firstOption.values as value}
+          {#if value.isAvailable}
+            <option value={value.id}>{value.name}</option>
+          {/if}
+        {/each}
+      </select>
+    </label>
+  {/if}
   <label class="mt-3 grid gap-1 text-sm">
-    <span>Side</span>
-    <select class="rounded border border-stone-300 px-3 py-2" name="side">
-      <option value="">No side needed</option>
-      <option value="side-salad">Green salad</option>
-      <option value="side-potatoes">Lemon potatoes</option>
-    </select>
-  </label>
-  <label class="mt-3 grid gap-1 text-sm">
-    <span>Quantity</span>
-    <input class="rounded border border-stone-300 px-3 py-2" name="quantity" type="number" min="1" value="1" />
+    <span>{d['table.quantity']}</span>
+    <input class="ew-input" name="quantity" type="number" min="1" value="1" />
   </label>
   <textarea
-    class="mt-3 min-h-20 w-full rounded border border-stone-300 px-3 py-2"
+    class="ew-input mt-3 min-h-20 w-full"
     name="customerNotes"
-    placeholder="Notes for the kitchen"></textarea>
-  <button class="mt-3 w-full rounded bg-stone-950 px-4 py-3 font-medium text-white">Submit order</button>
+    placeholder={d['table.notes']}></textarea>
+  <button class="ew-button-primary mt-3 w-full">{d['table.submit']}</button>
 </form>

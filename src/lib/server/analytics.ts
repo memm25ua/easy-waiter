@@ -1,4 +1,6 @@
 import type { OperationalSummary, Order } from "$lib/types";
+import { listOrders } from "./orders";
+import { createServiceRoleClient } from "./supabase";
 
 export function aggregateOperationalSummary(
   orders: Order[],
@@ -36,4 +38,20 @@ export function aggregateOperationalSummary(
               submissionDurations.length,
           ),
   };
+}
+
+export async function getOperationalSummary(
+  locationId: string,
+): Promise<OperationalSummary> {
+  const orders = await listOrders(locationId);
+  const { data } = await createServiceRoleClient()
+    .from("table_sessions")
+    .select("id,opened_at")
+    .eq("location_id", locationId);
+  return aggregateOperationalSummary(
+    orders,
+    new Map(
+      (data ?? []).map((row) => [row.id as string, row.opened_at as string]),
+    ),
+  );
 }

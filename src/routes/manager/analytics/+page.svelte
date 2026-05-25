@@ -2,23 +2,24 @@
   import MetricCard from '$lib/components/manager/MetricCard.svelte';
   import ServicePeriodPicker from '$lib/components/manager/ServicePeriodPicker.svelte';
   let { data } = $props();
+  const d = $derived(data.dictionary);
 </script>
 
 <div class="space-y-6">
   <div>
-    <p class="text-sm font-medium uppercase tracking-wide text-blue-700">Analytics</p>
-    <h2 class="mt-1 text-3xl font-semibold tracking-tight">Workload summary</h2>
+    <p class="ew-eyebrow">{d['analytics.eyebrow']}</p>
+    <h2 class="ew-display mt-1 text-4xl">{d['analytics.title']}</h2>
   </div>
-  <ServicePeriodPicker period={data.period} />
+  <ServicePeriodPicker period={data.period} {d} />
   <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-    <MetricCard label="Total orders" value={data.summary.totalOrders} />
-    <MetricCard label="AI-assisted orders" value={data.summary.aiAssistedOrders} />
-    <MetricCard label="Manual orders" value={data.summary.manualOrders} />
-    <MetricCard label="Staff interventions" value={data.summary.staffInterventions} />
+    <MetricCard label={d['analytics.totalOrders']} value={data.summary.totalOrders} />
+    <MetricCard label={d['analytics.aiOrders']} value={data.summary.aiAssistedOrders} />
+    <MetricCard label={d['analytics.manualOrders']} value={data.summary.manualOrders} />
+    <MetricCard label={d['analytics.interventions']} value={data.summary.staffInterventions} />
     <MetricCard
-      label="Average submission time"
+      label={d['analytics.averageSubmission']}
       value={`${Math.round(data.summary.averageSubmissionSeconds / 60)} min`}
-      detail="From table open to order submission"
+      detail={d['analytics.averageDetail']}
     />
   </div>
 </div>

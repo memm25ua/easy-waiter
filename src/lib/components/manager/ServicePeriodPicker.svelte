@@ -1,5 +1,10 @@
 <script lang="ts">
-  let { period } = $props<{ period: string }>();
+  let { period, d } = $props<{ period: string; d: Record<string, string> }>();
+  const labels: Record<string, string> = $derived({
+    today: d['common.today'],
+    week: d['common.week'],
+    month: d['common.month']
+  });
 </script>
 
 <form class="flex flex-wrap gap-2">
@@ -8,10 +13,10 @@
       name="period"
       value={option}
       class={period === option
-        ? 'rounded bg-stone-950 px-3 py-2 text-sm font-medium text-white'
-        : 'rounded border border-stone-300 px-3 py-2 text-sm font-medium'}
+        ? 'ew-button-primary'
+        : 'ew-button-secondary'}
     >
-      {option}
+      {labels[option] ?? option}
     </button>
   {/each}
 </form>

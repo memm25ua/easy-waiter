@@ -1,28 +1,37 @@
-<main class="mx-auto grid max-w-6xl gap-8 px-4 py-10 lg:grid-cols-[1fr_22rem]">
-  <section class="space-y-6">
-    <p class="text-sm font-medium uppercase tracking-wide text-blue-700">Dine-in ordering POC</p>
-    <div class="max-w-3xl space-y-4">
-      <h1 class="text-4xl font-semibold tracking-tight text-stone-950 sm:text-5xl">
-        Restaurant menu import, table ordering, AI assistance, and live staff control.
-      </h1>
-      <p class="text-lg leading-8 text-stone-700">
-        A lean validation app for restaurants that want customers to order from their table
-        while staff keep full control of menus and service.
-      </p>
-    </div>
-    <div class="flex flex-wrap gap-3">
-      <a class="rounded bg-stone-950 px-4 py-3 font-medium text-white" href="/manager">Open manager</a>
-      <a class="rounded border border-stone-300 px-4 py-3 font-medium" href="/table/DEMO-1"
-        >Open demo table</a
-      >
+<script lang="ts">
+  import LandingHero from '$lib/components/landing/LandingHero.svelte';
+  import LeadForm from '$lib/components/landing/LeadForm.svelte';
+  import WorkflowSections from '$lib/components/landing/WorkflowSections.svelte';
+
+  let { data, form } = $props();
+  const leadForm = $derived(form ?? undefined);
+  const d = $derived(data.dictionary);
+</script>
+
+<svelte:head>
+  <title>Easy Waiter | Dine-in ordering for restaurants</title>
+  <meta
+    name="description"
+    content="Easy Waiter helps restaurants run dine-in table ordering, staff order control, menu publishing, and AI menu assistance."
+  />
+  {#if data.metadata.noIndex}
+    <meta name="robots" content="noindex,nofollow" />
+  {/if}
+  <link rel="canonical" href={data.metadata.environment === 'production' ? '/': '/'} />
+  <link rel="alternate" hreflang="en" href="/?lang=en" />
+  <link rel="alternate" hreflang="es" href="/?lang=es" />
+</svelte:head>
+
+<main>
+  <LandingHero {d} />
+  <WorkflowSections {d} />
+  <section id="contact" class="mx-auto max-w-6xl px-4 py-10">
+    <div class="ew-panel grid gap-5 p-6">
+      <div>
+        <h2 class="ew-display text-3xl">{d['landing.contact.title']}</h2>
+        <p class="ew-muted mt-2">{d['landing.contact.body']}</p>
+      </div>
+      <LeadForm form={leadForm} {d} />
     </div>
   </section>
-  <aside class="rounded border border-stone-200 bg-white p-5 shadow-sm">
-    <h2 class="font-semibold">Demo paths</h2>
-    <ul class="mt-4 space-y-3 text-sm text-stone-700">
-      <li><a class="text-blue-700 underline" href="/manager/menus">Import and review menus</a></li>
-      <li><a class="text-blue-700 underline" href="/manager/orders">Monitor live orders</a></li>
-      <li><a class="text-blue-700 underline" href="/manager/analytics">View workload metrics</a></li>
-    </ul>
-  </aside>
 </main>

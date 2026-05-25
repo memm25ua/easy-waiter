@@ -1,39 +1,130 @@
-import { validateCart } from "$lib/cart";
-import { demoMenu } from "./demo-data";
+import { findMenuItem, validateCart } from "$lib/cart";
+import { createChatCompletion } from "./openrouter";
+import { getPublishedMenu } from "./menu";
+import { createServiceRoleClient } from "./supabase";
 import { submitCustomerOrder } from "./table-session";
-import type { CartItem, TableSession } from "$lib/types";
+import { t } from "$lib/i18n";
+import type { CartItem, Menu, SupportedLocale, TableSession } from "$lib/types";
 
 export interface AiWaiterInput {
   session: TableSession;
   message: string;
   currentCart: CartItem[];
+  locale?: SupportedLocale;
   customerConfirmedAction?: CartItem[] | null;
 }
 
-export async function runAiWaiter(input: AiWaiterInput) {
-  const normalized = input.message.toLowerCase();
-  const proposal: CartItem[] =
-    normalized.includes("rice") || normalized.includes("recommend")
-      ? [
-          {
-            menuItemId: "item-rice",
-            quantity: 1,
-            selections: [{ optionId: "option-side", valueIds: ["side-salad"] }],
-          },
-        ]
-      : input.currentCart;
+export function buildApprovedMenuContext(menu: Menu) {
+  return menu.sections
+    .flatMap((section) =>
+      section.items
+        .filter((item) => item.isAvailable)
+        .map(
+          (item) =>
+            `${section.name}: ${item.name} ${item.description} ${(item.price / 100).toFixed(2)} ${item.currency}`,
+        ),
+    )
+    .join("\n");
+}
 
-  if (
+function proposeCart(message: string, menu: Menu, currentCart: CartItem[]) {
+  const normalized = message.toLowerCase();
+  const availableItems = menu.sections
+    .flatMap((section) => section.items)
+    .filter((item) => item.isAvailable);
+  const matched =
+    availableItems.find((item) =>
+      normalized.includes(item.name.toLowerCase()),
+    ) ??
+    availableItems.find(
+      (item) => normalized.includes("recommend") || normalized.includes("rice"),
+    ) ??
+    null;
+  if (!matched) return currentCart;
+
+  return [
+    {
+      menuItemId: matched.id,
+      quantity: 1,
+      selections: matched.options
+        .map((option) => ({
+          optionId: option.id,
+          valueIds: option.isRequired
+            ? [option.values.find((value) => value.isAvailable)?.id ?? ""]
+            : [],
+        }))
+        .filter((selection) => selection.valueIds.every(Boolean)),
+    },
+  ];
+}
+
+async function writeAudit(input: {
+  session: TableSession;
+  actionType: string;
+  proposedPayload: unknown;
+  confirmationState: string;
+  providerStatus: string;
+  result: string;
+  escalationReason?: string | null;
+  submittedOrderId?: string | null;
+  locale?: SupportedLocale;
+}) {
+  if (!input.session.restaurantId) return;
+  await createServiceRoleClient()
+    .from("ai_action_audits")
+    .insert({
+      table_session_id: input.session.id,
+      restaurant_id: input.session.restaurantId,
+      location_id: input.session.locationId,
+      action_type: input.actionType,
+      proposed_payload: input.proposedPayload,
+      confirmation_state: input.confirmationState,
+      provider_status: input.providerStatus,
+      result: input.result,
+      escalation_reason: input.escalationReason ?? null,
+      submitted_order_id: input.submittedOrderId ?? null,
+      locale: input.locale ?? "en",
+    });
+}
+
+export async function runAiWaiter(input: AiWaiterInput) {
+  const locale = input.locale ?? "en";
+  const menu = await getPublishedMenu(input.session.locationId);
+  if (!menu) throw new Error("No published menu is available for this table.");
+
+  const normalized = input.message.toLowerCase();
+  const proposal = proposeCart(input.message, menu, input.currentCart);
+  const unsupported =
     normalized.includes("allergy") ||
+    normalized.includes("allergen") ||
+    normalized.includes("safety") ||
+    normalized.includes("unsafe") ||
+    normalized.includes("unavailable") ||
+    normalized.includes("sold out") ||
+    normalized.includes("substitution") ||
+    normalized.includes("substitute") ||
     normalized.includes("refund") ||
-    normalized.includes("cancel")
-  ) {
+    normalized.includes("complaint") ||
+    normalized.includes("discount") ||
+    normalized.includes("cancel");
+
+  if (unsupported) {
+    await writeAudit({
+      session: input.session,
+      actionType: "escalation",
+      proposedPayload: proposal,
+      confirmationState: "not_required",
+      providerStatus: "not_called",
+      result: "escalated",
+      escalationReason: "Staff judgment required.",
+      locale,
+    });
     return {
-      reply: "A staff member should help with that request.",
+      reply: t(locale, "ai.staffHelp"),
       recommendedItems: [],
       cartProposal: proposal,
       requiresConfirmation: false,
-      escalationReason: "Staff judgment required.",
+      escalationReason: t(locale, "ai.staffHelp"),
       submittedOrderId: null,
     };
   }
@@ -41,9 +132,19 @@ export async function runAiWaiter(input: AiWaiterInput) {
   if (input.customerConfirmedAction) {
     const confirmed = JSON.stringify(input.customerConfirmedAction);
     const expected = JSON.stringify(proposal);
-    if (confirmed !== expected)
-      throw new Error("Please review the updated cart before confirming.");
-    const validation = validateCart(demoMenu, proposal);
+    if (confirmed !== expected) {
+      await writeAudit({
+        session: input.session,
+        actionType: "confirmation",
+        proposedPayload: proposal,
+        confirmationState: "rejected",
+        providerStatus: "not_called",
+        result: "confirmation_mismatch",
+        locale,
+      });
+      throw new Error(t(locale, "ai.reviewCart"));
+    }
+    const validation = validateCart(menu, proposal);
     if (validation.issues.length > 0)
       throw new Error(validation.issues[0].message);
     const order = await submitCustomerOrder({
@@ -51,9 +152,21 @@ export async function runAiWaiter(input: AiWaiterInput) {
       items: proposal,
       source: "ai",
     });
+    await writeAudit({
+      session: input.session,
+      actionType: "submit_order",
+      proposedPayload: proposal,
+      confirmationState: "confirmed",
+      providerStatus: "not_called",
+      result: "submitted",
+      submittedOrderId: order.id,
+      locale,
+    });
     return {
-      reply: "Your confirmed order has been sent to the kitchen.",
-      recommendedItems: ["Chicken Rice"],
+      reply: t(locale, "ai.confirmed"),
+      recommendedItems: proposal.map(
+        (item) => findMenuItem(menu, item.menuItemId)?.name ?? "Menu item",
+      ),
       cartProposal: proposal,
       requiresConfirmation: false,
       escalationReason: null,
@@ -61,14 +174,46 @@ export async function runAiWaiter(input: AiWaiterInput) {
     };
   }
 
+  const provider = await createChatCompletion([
+    {
+      role: "system",
+      content: `Answer only from this restaurant-approved menu context:\n${buildApprovedMenuContext(menu)}`,
+    },
+    {
+      role: "user",
+      content: `Reply in ${locale === "es" ? "Spanish" : "English"}.\n${input.message}`,
+    },
+  ]);
+
+  const fallback = provider.providerStatus !== "success";
+  const reply = fallback
+    ? t(locale, "ai.unavailable")
+    : provider.content ||
+      (locale === "es"
+        ? "Puedo ayudar con preguntas del menú y preparar un pedido para que lo confirmes."
+        : "I can help with menu questions and prepare a cart for your confirmation.");
+
+  await writeAudit({
+    session: input.session,
+    actionType: "proposal",
+    proposedPayload: proposal,
+    confirmationState: proposal.length > 0 ? "required" : "not_required",
+    providerStatus: provider.providerStatus,
+    result: fallback ? "fallback" : "proposed",
+    escalationReason: fallback
+      ? String(provider.metadata.reason ?? provider.providerStatus)
+      : null,
+    locale,
+  });
+
   return {
-    reply: normalized.includes("recommend")
-      ? "The Chicken Rice is a good choice and comes with a required side."
-      : "I can answer menu questions and prepare a cart for your confirmation.",
-    recommendedItems: ["Chicken Rice"],
+    reply,
+    recommendedItems: proposal.map(
+      (item) => findMenuItem(menu, item.menuItemId)?.name ?? "Menu item",
+    ),
     cartProposal: proposal,
     requiresConfirmation: proposal.length > 0,
-    escalationReason: null,
+    escalationReason: fallback ? t(locale, "ai.providerUnavailable") : null,
     submittedOrderId: null,
   };
 }

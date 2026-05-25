@@ -13,3 +13,5 @@ test-results/
 AGENTS.md
 specs/001-ai-menu-ordering/plan.md
 specs/001-ai-menu-ordering/spec.md
+specs/002-production-readiness/checklists/requirements.md
+specs/002-production-readiness/spec.md

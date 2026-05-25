@@ -2,19 +2,19 @@
   import { getAllowedOrderStatuses } from '$lib/order-status';
   import type { Order } from '$lib/types';
 
-  let { order } = $props<{ order: Order }>();
+  let { order, d } = $props<{ order: Order; d: Record<string, string> }>();
   const allowed = $derived(getAllowedOrderStatuses(order.status));
 </script>
 
 <form method="post" action="?/status" class="mt-3 grid gap-2">
   <input type="hidden" name="orderId" value={order.id} />
-  <select class="rounded border border-stone-300 px-2 py-2 text-sm" name="status" disabled={allowed.length === 0}>
+  <select class="ew-input text-sm" name="status" disabled={allowed.length === 0}>
     {#each allowed as status}
       <option value={status}>{status.replace('_', ' ')}</option>
     {/each}
   </select>
-  <input class="rounded border border-stone-300 px-2 py-2 text-sm" name="staffNotes" placeholder="Staff note" />
-  <button class="rounded bg-stone-950 px-3 py-2 text-sm font-medium text-white" disabled={allowed.length === 0}>
-    Update
+  <input class="ew-input text-sm" name="staffNotes" placeholder={d['orders.staffNote']} />
+  <button class="ew-button-primary" disabled={allowed.length === 0}>
+    {d['orders.update']}
   </button>
 </form>

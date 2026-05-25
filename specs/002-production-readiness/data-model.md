@@ -12,12 +12,14 @@ assignments.
 - `id`
 - `email`
 - `display_name`
+- `preferred_locale`
 - `created_at`
 - `last_sign_in_at`
 
 **Relationships**:
 
 - Has many `StaffAssignment`
+- Has one active `LanguagePreference`
 - Creates `MarketingLead` only when requesting contact before sign-up
 
 **Validation Rules**:
@@ -25,6 +27,7 @@ assignments.
 - Email must be unique through the authentication provider.
 - Staff routes require an account with at least one active assignment.
 - Account recovery follows the configured auth provider flow.
+- Preferred locale must be `en` or `es` when present.
 
 ### Restaurant
 
@@ -89,6 +92,8 @@ Represents account access to a restaurant or location.
 - `location_id`
 - `role` (`owner`, `manager`, `staff`)
 - `is_active`
+- `invitation_id`
+- `accepted_at`
 - `created_at`
 
 **Relationships**:
@@ -96,14 +101,52 @@ Represents account access to a restaurant or location.
 - Belongs to `Account`
 - Belongs to `Restaurant`
 - Optionally belongs to one `Location`
+- May be created from one `StaffInvitation`
 
 **Validation Rules**:
 
-- Owners may administer restaurant setup and staff assignments.
-- Managers may manage menus, tables, orders, and analytics for assigned
-  locations.
-- Staff may monitor and update orders for assigned locations.
+- Owners may administer restaurant profile, locations, staff, menus, and
+  analytics.
+- Managers may manage assigned locations, menus, orders, and analytics.
+- Staff may handle assigned-location orders only.
 - Inactive assignments cannot access staff routes.
+- Non-owner assignments for existing restaurants are created through accepted
+  owner or manager email invitations with explicit role and location scope.
+
+### StaffInvitation
+
+Represents an invitation for a person to join an existing restaurant.
+
+**Fields**:
+
+- `id`
+- `restaurant_id`
+- `location_id`
+- `email`
+- `role` (`manager`, `staff`)
+- `status` (`pending`, `accepted`, `expired`, `revoked`)
+- `token_hash`
+- `invited_by_account_id`
+- `accepted_by_account_id`
+- `expires_at`
+- `accepted_at`
+- `created_at`
+
+**Relationships**:
+
+- Belongs to `Restaurant`
+- Optionally belongs to one `Location`
+- Created by an owner or authorized manager account
+- Creates one `StaffAssignment` when accepted
+
+**Validation Rules**:
+
+- Invitation tokens are unguessable and stored hashed.
+- Owners may invite managers or staff within their restaurant.
+- Managers may invite staff only for locations they manage.
+- Invitations cannot create access after expiry, revocation, or acceptance.
+- Accepted invitation email must match the accepting account email unless an
+  owner resolves the mismatch.
 
 ### RestaurantTable
 
@@ -140,8 +183,10 @@ Represents a time-bound customer ordering context.
 - `table_id`
 - `location_id`
 - `session_code`
+- `access_token_hash`
 - `status` (`active`, `closed`, `expired`)
 - `opened_at`
+- `expires_at`
 - `closed_at`
 - `created_by`
 
@@ -156,7 +201,10 @@ Represents a time-bound customer ordering context.
 
 - Only active sessions can submit new orders.
 - Closed or expired sessions remain readable for audit but block ordering.
-- Session codes must be scoped to the table and hard to guess.
+- Customer access tokens must be unguessable, scoped to one active table
+  session, stored hashed, and invalid after staff close or expiry.
+- Token guessing, reuse across sessions, or token alteration must not reveal
+  staff-only or cross-tenant data.
 
 ### PersistentMenu
 
@@ -246,6 +294,7 @@ Represents customer or manager AI interaction state.
 - `location_id`
 - `table_session_id`
 - `status` (`open`, `escalated`, `closed`)
+- `locale`
 - `last_message_at`
 - `created_at`
 
@@ -259,6 +308,8 @@ Represents customer or manager AI interaction state.
 
 - Customer conversations are scoped to active table sessions.
 - Staff-visible escalations require active staff assignment.
+- Locale must be `en` or `es` and should match the product language selected
+  for the customer or staff interaction.
 
 ### AIActionAudit
 
@@ -286,6 +337,9 @@ Records AI proposals, confirmations, fallbacks, and outcomes.
 
 - Every AI order proposal and confirmation must be auditable.
 - Failed provider calls record fallback reason without storing secrets.
+- Allergens or safety uncertainty, unavailable items, substitutions outside
+  menu options, complaints, refunds, discounts, and cancellation requests after
+  submission record escalation reason and do not complete automatically.
 
 ### MarketingLead
 
@@ -298,6 +352,7 @@ Represents a public visitor who requests contact instead of signing up.
 - `contact_name`
 - `email`
 - `phone`
+- `locale`
 - `message`
 - `source`
 - `created_at`
@@ -311,15 +366,51 @@ Represents a public visitor who requests contact instead of signing up.
 - Email is required.
 - Lead capture must not create staff access.
 - Public lead submission must be rate-limited or protected from abuse.
+- Locale records the product language used when the visitor submitted the
+  lead.
+
+### LanguagePreference
+
+Represents a user's selected product interface language.
+
+**Fields**:
+
+- `id`
+- `account_id`
+- `anonymous_session_id`
+- `locale` (`en`, `es`)
+- `source` (`explicit`, `browser`, `default`)
+- `created_at`
+- `updated_at`
+
+**Relationships**:
+
+- May belong to an `Account` after sign-up or sign-in
+- May belong to an anonymous marketing or table-ordering browser session before
+  authentication
+- Is read by public, account, onboarding, customer, staff, manager, AI, and
+  operational flows to choose translated product copy
+
+**Validation Rules**:
+
+- Locale is limited to English (`en`) and Spanish (`es`) in this production
+  increment.
+- Explicit user choice overrides browser/user locale detection.
+- Unsupported browser/user locales fall back to English.
+- Language changes must preserve the current workflow state for sign-up, table
+  ordering, AI confirmation, staff order update, and manager menu review.
+- Restaurant-provided content is not automatically translated.
 
 ### DeploymentEnvironment
 
-Represents documented production or staging runtime configuration.
+Represents documented Coolify production or staging runtime configuration.
 
 **Fields**:
 
 - `name`
 - `app_url`
+- `coolify_project_id`
+- `coolify_service_id`
 - `supabase_project_ref`
 - `auth_redirect_urls`
 - `ai_provider_enabled`
@@ -334,13 +425,23 @@ Represents documented production or staging runtime configuration.
 
 - Required secrets and public values must be present before launch.
 - Failed smoke tests block production release.
+- Production deployment documentation must target Coolify and include
+  local/staging validation plus rollback instructions.
 
 ## State Transitions
 
 ### StaffAssignment
 
+- `invited` -> `active` when invitation is accepted
 - `active` -> `inactive`
 - `inactive` -> `active` only by owner or authorized manager
+
+### StaffInvitation
+
+- `pending` -> `accepted`
+- `pending` -> `expired`
+- `pending` -> `revoked`
+- `accepted`, `expired`, and `revoked` are terminal for that invitation
 
 ### TableSession
 
@@ -360,3 +461,9 @@ Represents documented production or staging runtime configuration.
 - `running` -> `passed`
 - `running` -> `failed`
 - `failed` -> `running` for retry after remediation
+
+### LanguagePreference
+
+- `default` -> `explicit` when a user manually selects English or Spanish
+- `browser` -> `explicit` when a user manually selects English or Spanish
+- `explicit` -> `explicit` when switching between English and Spanish

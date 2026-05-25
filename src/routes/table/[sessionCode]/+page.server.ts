@@ -1,5 +1,6 @@
 import { fail } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
+import { t } from "$lib/i18n";
 import { runAiWaiter } from "$lib/server/ai";
 import {
   getTableOrderingContext,
@@ -11,25 +12,32 @@ import type { CartItem } from "$lib/types";
 function parseCart(form: FormData): CartItem[] {
   const itemId = String(form.get("itemId") ?? "");
   if (!itemId) return [];
-  const side = String(form.get("side") ?? "");
+  const optionId = String(form.get("optionId") ?? "");
+  const optionValueId = String(form.get("optionValueId") ?? "");
   return [
     {
       menuItemId: itemId,
       quantity: Number(form.get("quantity") ?? 1),
-      selections: side ? [{ optionId: "option-side", valueIds: [side] }] : [],
+      selections:
+        optionId && optionValueId
+          ? [{ optionId, valueIds: [optionValueId] }]
+          : [],
     },
   ];
 }
 
-export const load: PageServerLoad = async ({ params }) => {
-  return getTableOrderingContext(params.sessionCode);
+export const load: PageServerLoad = async ({ params, parent }) => {
+  const base = await getTableOrderingContext(params.sessionCode);
+  const layout = await parent();
+  return { ...base, dictionary: layout.dictionary, locale: layout.locale };
 };
 
 export const actions: Actions = {
-  order: async ({ request, params }) => {
+  order: async ({ request, params, locals }) => {
+    const locale = locals.locale ?? "en";
     const session = await getTableSession(params.sessionCode);
     if (!session || session.status !== "active")
-      return fail(404, { message: "This table session is not active." });
+      return fail(404, { message: t(locale, "table.inactive.title") });
     const form = await request.formData();
     try {
       const order = await submitCustomerOrder({
@@ -38,20 +46,21 @@ export const actions: Actions = {
         source: "manual",
         customerNotes: String(form.get("customerNotes") ?? ""),
       });
-      return { message: "Order submitted.", orderId: order.id };
+      return { message: t(locale, "table.submitted"), orderId: order.id };
     } catch (error) {
       return fail(400, {
         message:
           error instanceof Error
             ? error.message
-            : "Order could not be submitted.",
+            : t(locale, "table.submitFailed"),
       });
     }
   },
-  ai: async ({ request, params }) => {
+  ai: async ({ request, params, locals }) => {
+    const locale = locals.locale ?? "en";
     const session = await getTableSession(params.sessionCode);
     if (!session || session.status !== "active")
-      return fail(404, { message: "This table session is not active." });
+      return fail(404, { message: t(locale, "table.inactive.title") });
     const form = await request.formData();
     const confirm = form.get("confirm") === "true";
     const proposal = parseCart(form);
@@ -60,12 +69,14 @@ export const actions: Actions = {
         session,
         message: String(form.get("message") ?? "recommend rice"),
         currentCart: [],
+        locale,
         customerConfirmedAction: confirm ? proposal : null,
       });
       return { ai: result, message: result.reply };
     } catch (error) {
       return fail(400, {
-        message: error instanceof Error ? error.message : "AI action failed.",
+        message:
+          error instanceof Error ? error.message : t(locale, "ai.failed"),
       });
     }
   },
