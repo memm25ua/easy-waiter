@@ -25,6 +25,7 @@ export const actions: Actions = {
       password,
     });
     if (error || !data.user) {
+      console.error("[sign-up] auth.signUp failed:", error?.message, error);
       return fail(400, {
         message: error?.message ?? t(locale, "auth.signUpFailed"),
         email,
@@ -40,12 +41,11 @@ export const actions: Actions = {
         timezone: String(form.get("timezone") ?? "Europe/Madrid"),
         currency: String(form.get("currency") ?? "EUR"),
       });
-    } catch (error) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("[sign-up] onboarding failed:", message, err);
       return fail(400, {
-        message:
-          error instanceof Error
-            ? error.message
-            : t(locale, "auth.setupFailed"),
+        message,
         email,
         restaurantName,
         locationName,
