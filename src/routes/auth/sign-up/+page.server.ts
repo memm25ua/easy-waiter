@@ -24,10 +24,20 @@ export const actions: Actions = {
       email,
       password,
     });
-    if (error || !data.user) {
-      console.error("[sign-up] auth.signUp failed:", error?.message, error);
+    if (error) {
+      console.error("[sign-up] auth.signUp error:", error.message, error);
       return fail(400, {
-        message: error?.message ?? t(locale, "auth.signUpFailed"),
+        message: error.message,
+        email,
+        restaurantName,
+        locationName,
+      });
+    }
+    if (!data.user) {
+      // Supabase returns null user (no error) when the email already exists —
+      // anti-enumeration behaviour. Treat as "check your inbox".
+      return fail(400, {
+        message: t(locale, "auth.emailAlreadyRegistered"),
         email,
         restaurantName,
         locationName,

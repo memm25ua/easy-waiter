@@ -51,6 +51,7 @@ const en = {
   "auth.currency": "Currency",
   "auth.supabaseMissing": "Supabase is not configured.",
   "auth.signUpFailed": "Sign-up failed.",
+  "auth.emailAlreadyRegistered": "This email is already registered. Check your inbox to confirm your account, or sign in.",
   "auth.setupFailed": "Restaurant setup failed.",
   "auth.onboarding.title": "Set up your restaurant",
   "auth.onboarding.submit": "Finish setup",

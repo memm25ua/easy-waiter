@@ -51,6 +51,7 @@ const es = {
   "auth.currency": "Moneda",
   "auth.supabaseMissing": "Supabase no está configurado.",
   "auth.signUpFailed": "No se pudo crear la cuenta.",
+  "auth.emailAlreadyRegistered": "Este email ya está registrado. Revisa tu bandeja de entrada para confirmar la cuenta o inicia sesión.",
   "auth.setupFailed": "No se pudo configurar el restaurante.",
   "auth.onboarding.title": "Configura tu restaurante",
   "auth.onboarding.submit": "Finalizar configuración",
