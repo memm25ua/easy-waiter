@@ -1,7 +1,6 @@
 import { fail, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 import { t } from "$lib/i18n";
-import { completeRestaurantOnboarding } from "$lib/server/onboarding";
 
 export const load: PageServerLoad = async ({ locals }) => {
   if (locals.staff) throw redirect(303, "/manager");
@@ -20,10 +19,20 @@ export const actions: Actions = {
     const password = String(form.get("password") ?? "");
     const restaurantName = String(form.get("restaurantName") ?? "");
     const locationName = String(form.get("locationName") ?? "");
-    const { data, error } = await locals.supabase.auth.signUp({
+    const timezone = String(form.get("timezone") ?? "Europe/Madrid");
+    const currency = String(form.get("currency") ?? "EUR");
+
+    const origin = new URL(request.url).origin;
+    const { error } = await locals.supabase.auth.signUp({
       email,
       password,
+      options: {
+        // Onboarding data stored in user metadata, completed after email confirmation
+        data: { pending_restaurant_name: restaurantName, pending_location_name: locationName, pending_timezone: timezone, pending_currency: currency },
+        emailRedirectTo: `${origin}/auth/callback`,
+      },
     });
+
     if (error) {
       console.error("[sign-up] auth.signUp error:", error.message, error);
       return fail(400, {
@@ -33,34 +42,9 @@ export const actions: Actions = {
         locationName,
       });
     }
-    if (!data.user) {
-      // Supabase returns null user (no error) when the email already exists —
-      // anti-enumeration behaviour. Treat as "check your inbox".
-      return fail(400, {
-        message: t(locale, "auth.emailAlreadyRegistered"),
-        email,
-        restaurantName,
-        locationName,
-      });
-    }
-    try {
-      await completeRestaurantOnboarding({
-        user: data.user,
-        restaurantName,
-        locationName,
-        timezone: String(form.get("timezone") ?? "Europe/Madrid"),
-        currency: String(form.get("currency") ?? "EUR"),
-      });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.error("[sign-up] onboarding failed:", message, err);
-      return fail(400, {
-        message,
-        email,
-        restaurantName,
-        locationName,
-      });
-    }
-    throw redirect(303, "/manager");
+
+    // Supabase returns {user: null, error: null} for ALL signups when email
+    // confirmation is enabled (anti-enumeration). Treat as success — check inbox.
+    throw redirect(303, `/auth/check-email?email=${encodeURIComponent(email)}`);
   },
 };
