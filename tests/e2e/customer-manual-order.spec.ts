@@ -15,3 +15,13 @@ test("customer submits a manual table order", async ({ page }) => {
     page.getByText(/Order submitted.|Side is required/),
   ).toBeVisible();
 });
+
+test("customer table link shows published menus rather than manager drafts", async ({
+  page,
+}) => {
+  await page.goto("/table/DEMO-1");
+  await expect(
+    page.getByRole("heading", { name: "Demo Bistro Menu" }),
+  ).toBeVisible();
+  await expect(page.getByText("draft", { exact: false })).toHaveCount(0);
+});

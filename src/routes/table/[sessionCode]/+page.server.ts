@@ -27,8 +27,8 @@ function parseCart(form: FormData): CartItem[] {
 }
 
 export const load: PageServerLoad = async ({ params, parent }) => {
-  const base = await getTableOrderingContext(params.sessionCode);
   const layout = await parent();
+  const base = await getTableOrderingContext(params.sessionCode);
   return { ...base, dictionary: layout.dictionary, locale: layout.locale };
 };
 

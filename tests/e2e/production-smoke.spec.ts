@@ -10,4 +10,6 @@ test("production smoke baseline covers landing and health", async ({
   ).toBeVisible();
   const health = await request.get("/health");
   expect([200, 503]).toContain(health.status());
+  const deploymentSmoke = await request.get("/health/deployment-smoke");
+  expect([200, 503]).toContain(deploymentSmoke.status());
 });

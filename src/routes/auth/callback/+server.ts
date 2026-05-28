@@ -6,9 +6,13 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   const code = url.searchParams.get("code");
   if (!code || !locals.supabase) throw redirect(303, "/auth/sign-in");
 
-  const { data, error } = await locals.supabase.auth.exchangeCodeForSession(code);
+  const { data, error } =
+    await locals.supabase.auth.exchangeCodeForSession(code);
   if (error || !data.user) {
-    console.error("[auth/callback] exchangeCodeForSession failed:", error?.message);
+    console.error(
+      "[auth/callback] exchangeCodeForSession failed:",
+      error?.message,
+    );
     throw redirect(303, "/auth/sign-in");
   }
 
@@ -26,7 +30,10 @@ export const GET: RequestHandler = async ({ url, locals }) => {
         currency: (meta.pending_currency as string) || "EUR",
       });
     } catch (err) {
-      console.error("[auth/callback] onboarding failed:", err instanceof Error ? err.message : err);
+      console.error(
+        "[auth/callback] onboarding failed:",
+        err instanceof Error ? err.message : err,
+      );
     }
   }
 

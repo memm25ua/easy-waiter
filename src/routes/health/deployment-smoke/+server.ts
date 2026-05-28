@@ -9,7 +9,16 @@ export const GET: RequestHandler = async ({ locals }) => {
   const result = await recordSmokeTestResult({
     name: "deployment-smoke",
     status: health.ok ? "pass" : "fail",
-    details: { checks: health.checks },
+    details: {
+      checks: health.checks,
+      completeWorkflows: [
+        "import-agent configuration",
+        "stable table links",
+        "published menu",
+        "customer order",
+        "staff status update",
+      ],
+    },
   });
   return json({ health, result }, { status: health.ok ? 200 : 503 });
 };

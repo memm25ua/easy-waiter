@@ -87,6 +87,30 @@ async function writeAudit(input: {
     });
 }
 
+export async function writeMenuImportAudit(input: {
+  restaurantId: string;
+  locationId: string;
+  importJobId: string;
+  providerStatus: "not_called" | "success" | "timeout" | "error" | "disabled";
+  result: string;
+  fallbackReason?: string | null;
+  locale?: SupportedLocale;
+}) {
+  await createServiceRoleClient()
+    .from("ai_action_audits")
+    .insert({
+      restaurant_id: input.restaurantId,
+      location_id: input.locationId,
+      action_type: "menu_import",
+      proposed_payload: { importJobId: input.importJobId },
+      confirmation_state: "not_required",
+      provider_status: input.providerStatus,
+      result: input.result,
+      escalation_reason: input.fallbackReason ?? null,
+      locale: input.locale ?? "en",
+    });
+}
+
 export async function runAiWaiter(input: AiWaiterInput) {
   const locale = input.locale ?? "en";
   const menu = await getPublishedMenu(input.session.locationId);

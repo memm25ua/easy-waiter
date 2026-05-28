@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   canTransitionOrderStatus,
+  formatCustomerOrderStatus,
   getAllowedOrderStatuses,
+  isCustomerVisibleOrderStatus,
 } from "$lib/order-status";
 
 describe("order status transitions", () => {
@@ -15,5 +17,11 @@ describe("order status transitions", () => {
   it("blocks terminal status changes", () => {
     expect(getAllowedOrderStatuses("served")).toEqual([]);
     expect(canTransitionOrderStatus("cancelled", "preparing")).toBe(false);
+  });
+
+  it("formats customer-safe status labels", () => {
+    expect(formatCustomerOrderStatus("preparing")).toBe("Preparing");
+    expect(isCustomerVisibleOrderStatus("cancelled")).toBe(false);
+    expect(isCustomerVisibleOrderStatus("ready")).toBe(true);
   });
 });

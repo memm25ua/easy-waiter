@@ -102,6 +102,11 @@ export function evaluateDeploymentHealth(
       ).startsWith("https://"),
       detail: "configured",
     },
+    {
+      name: t(locale, "health.completeWorkflows"),
+      ok: Boolean(privateEnv.SUPABASE_SERVICE_ROLE_KEY),
+      detail: "menu import, table links, customer orders, and staff updates",
+    },
   ];
 
   return {

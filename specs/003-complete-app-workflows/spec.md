@@ -16,7 +16,7 @@
 - Q: Should customer links be one per table, and when should they stop accepting orders? → A: One table link stays active until staff close/reset the table session.
 - Q: How should the system handle concurrent owner or manager edits to the same menu content? → A: Detect conflicting edits and require review before overwriting.
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Import Menu From PDF Or Image (Priority: P1)
 
@@ -119,7 +119,7 @@ Owners, managers, staff, and customers can each complete their expected producti
 - A user attempts to access another restaurant's menu import, menu editor, table links, or orders by changing the URL.
 - Product interface text appears in English or Spanish, while restaurant-provided menu content remains exactly as entered by staff.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -150,7 +150,7 @@ Owners, managers, staff, and customers can each complete their expected producti
 - **FR-023**: Normal customer menu browsing, cart updates, order submission feedback, and staff status updates MUST provide visible feedback within production service expectations for small and medium restaurants.
 - **FR-024**: The system MUST provide testable role-based access outcomes for owner, manager, staff, customer, unauthenticated visitor, and cross-restaurant access attempts.
 
-### Key Entities *(include if feature involves data)*
+### Key Entities _(include if feature involves data)_
 
 - **Menu Import Source**: An uploaded PDF or image used to create a reviewable menu draft, including file identity, upload owner, restaurant scope, processing state, extraction warnings, and review status.
 - **Menu Draft**: Editable menu content that is not yet visible to customers, including imported or manually created categories, items, prices, options, modifiers, availability, and review warnings.
@@ -162,7 +162,7 @@ Owners, managers, staff, and customers can each complete their expected producti
 - **Customer Order**: A submitted request from a table session, including selected menu items, options, quantities, notes, source, status, and service history.
 - **AI Order Proposal**: A proposed order created through AI assistance that must be confirmed by the customer before becoming a submitted order.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

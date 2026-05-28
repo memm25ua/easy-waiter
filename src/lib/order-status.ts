@@ -29,3 +29,20 @@ export function assertOrderStatusTransition(
     throw new Error(`Order cannot move from ${from} to ${to}`);
   }
 }
+
+export function formatCustomerOrderStatus(status: OrderStatus) {
+  const labels: Record<OrderStatus, string> = {
+    new: "Sent to staff",
+    accepted: "Accepted",
+    preparing: "Preparing",
+    ready: "Ready",
+    served: "Served",
+    cancelled: "Cancelled",
+    needs_attention: "Staff review",
+  };
+  return labels[status];
+}
+
+export function isCustomerVisibleOrderStatus(status: OrderStatus) {
+  return status !== "cancelled";
+}

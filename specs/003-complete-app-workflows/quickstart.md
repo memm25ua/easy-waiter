@@ -27,6 +27,15 @@ npm run test:rls
 npm run build
 ```
 
+## Baseline Validation
+
+- 2026-05-26: `npm run test:unit -- --run tests/unit/menu-publish.test.ts tests/unit/tenant.test.ts` passed with 10 unit files and 22 tests.
+- 2026-05-26: `npm run check` passed with 0 Svelte diagnostics.
+- 2026-05-28: `npm run lint`, `npm run check`, `npm run test:unit`,
+  `npm run test:integration`, `npm run test:rls`, `npm run build`, and
+  `npm run test:e2e` completed locally. RLS and Supabase-backed browser tests
+  were skipped where the required Supabase test environment was not configured.
+
 Run the role-complete browser validation when the implementation is available:
 
 ```bash

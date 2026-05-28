@@ -10,4 +10,5 @@ test("staff board shows needs-attention lane", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "needs attention" }),
   ).toBeVisible();
+  await expect(page.getByText("Review reason").first()).toBeVisible();
 });

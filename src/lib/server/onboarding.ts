@@ -73,3 +73,15 @@ export async function completeRestaurantOnboarding(input: {
     staffAssignmentId: assignment.id,
   };
 }
+
+export function buildOnboardingReadiness(input: {
+  locationId: string;
+  hasMenuWorkspace?: boolean;
+  hasTableSetup?: boolean;
+}) {
+  return {
+    locationId: input.locationId,
+    menuWorkspaceReady: input.hasMenuWorkspace ?? true,
+    tableSetupReady: input.hasTableSetup ?? true,
+  };
+}

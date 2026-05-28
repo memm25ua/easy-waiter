@@ -1,6 +1,6 @@
 import { assertOrderStatusTransition } from "$lib/order-status";
 import { createServiceRoleClient } from "./supabase";
-import type { CartItem, Order, OrderStatus } from "$lib/types";
+import type { CartItem, Order, OrderStatus, StaffAssignment } from "$lib/types";
 
 interface OrderRow {
   id: string;
@@ -58,6 +58,10 @@ export async function listOrders(locationId: string): Promise<Order[]> {
   return (data ?? []).map((row) => mapOrder(row as unknown as OrderRow));
 }
 
+export async function listAssignedLocationOrders(staff: StaffAssignment) {
+  return listOrders(staff.locationId);
+}
+
 export async function listOrdersForSession(
   tableSessionId: string,
 ): Promise<Order[]> {
@@ -79,13 +83,18 @@ export function orderNeedsAttention(order: Order): boolean {
 }
 
 export async function createOrder(
-  input: Omit<Order, "id" | "createdAt" | "updatedAt">,
+  input: Omit<Order, "id" | "createdAt" | "updatedAt"> & {
+    restaurantId?: string | null;
+    publishedMenuSnapshotId?: string | null;
+  },
 ) {
   const { data, error } = await createServiceRoleClient()
     .from("orders")
     .insert({
+      restaurant_id: input.restaurantId ?? null,
       location_id: input.locationId,
       table_session_id: input.tableSessionId,
+      published_menu_snapshot_id: input.publishedMenuSnapshotId ?? null,
       source: input.source,
       status: input.status,
       items: input.items,
@@ -98,6 +107,14 @@ export async function createOrder(
     .single();
 
   if (error) throw error;
+  const { error: eventError } = await createServiceRoleClient()
+    .from("order_status_events")
+    .insert({
+      order_id: data.id,
+      from_status: null,
+      to_status: input.status,
+    });
+  if (eventError) throw eventError;
   return mapOrder(data as unknown as OrderRow);
 }
 
@@ -105,6 +122,7 @@ export async function updateOrderStatus(
   orderId: string,
   status: OrderStatus,
   staffNotes = "",
+  changedBy?: string | null,
 ) {
   const client = createServiceRoleClient();
   const { data: existing, error: readError } = await client
@@ -124,5 +142,14 @@ export async function updateOrderStatus(
     .single();
 
   if (error) throw error;
+  const { error: eventError } = await client
+    .from("order_status_events")
+    .insert({
+      order_id: orderId,
+      from_status: order.status,
+      to_status: status,
+      changed_by: changedBy ?? null,
+    });
+  if (eventError) throw eventError;
   return mapOrder(data as unknown as OrderRow);
 }

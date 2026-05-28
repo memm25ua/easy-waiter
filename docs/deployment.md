@@ -13,11 +13,24 @@ Configure `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY`,
 browser; service-role, OpenRouter, and smoke-test values must remain
 server-only.
 
+Menu PDF/image import also requires server-only OCR and AI import-agent
+configuration. Set `OCR_PROVIDER`, `OCR_ENDPOINT`, and `OCR_API_KEY` when an
+external OCR provider is used. The AI import agent uses the same server-side
+OpenRouter credentials as the AI waiter, but import processing must pass both
+the tenant-scoped uploaded resource reference and persisted OCR text. Never
+expose OCR provider keys, OpenRouter keys, uploaded menu resource paths, or OCR
+text in public runtime variables.
+
 ## Database
 
 Apply Supabase migrations, reset local seed data only in disposable
 environments, enable RLS, and verify storage policies for menu imports before
 accepting real restaurant data.
+
+Before launch, verify that menu source files are stored in tenant-scoped
+storage, OCR text is persisted only in tenant-owned records, critical import
+warnings block publication, and non-critical warnings remain visible to owners
+and managers after publication.
 
 ## Coolify Build And Deploy
 

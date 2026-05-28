@@ -4,6 +4,8 @@ import { createBrowserClient, createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import type { Cookies } from "@sveltejs/kit";
 
+export const MENU_IMPORTS_BUCKET = "menu-imports";
+
 function requirePublicConfig() {
   const url = publicEnv.PUBLIC_SUPABASE_URL;
   const anonKey = publicEnv.PUBLIC_SUPABASE_ANON_KEY;
@@ -61,4 +63,41 @@ export function createServiceRoleClient() {
   return createClient(url, serviceRoleKey, {
     auth: { persistSession: false },
   });
+}
+
+export function buildMenuImportResourcePath(input: {
+  restaurantId: string;
+  locationId: string;
+  importJobId: string;
+  fileName: string;
+}) {
+  const safeFileName = input.fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+  return `${input.restaurantId}/${input.locationId}/${input.importJobId}/${safeFileName}`;
+}
+
+export async function uploadMenuImportResource(input: {
+  path: string;
+  body: Blob | ArrayBuffer | Uint8Array;
+  contentType: string;
+}) {
+  const supabase = createServiceRoleClient();
+  const { data, error } = await supabase.storage
+    .from(MENU_IMPORTS_BUCKET)
+    .upload(input.path, input.body, {
+      contentType: input.contentType,
+      upsert: false,
+    });
+
+  if (error) throw error;
+  return data;
+}
+
+export async function createMenuImportResourceReference(path: string) {
+  const supabase = createServiceRoleClient();
+  const { data, error } = await supabase.storage
+    .from(MENU_IMPORTS_BUCKET)
+    .createSignedUrl(path, 60 * 10);
+
+  if (error) throw error;
+  return data.signedUrl;
 }

@@ -28,7 +28,12 @@ export const actions: Actions = {
       password,
       options: {
         // Onboarding data stored in user metadata, completed after email confirmation
-        data: { pending_restaurant_name: restaurantName, pending_location_name: locationName, pending_timezone: timezone, pending_currency: currency },
+        data: {
+          pending_restaurant_name: restaurantName,
+          pending_location_name: locationName,
+          pending_timezone: timezone,
+          pending_currency: currency,
+        },
         emailRedirectTo: `${origin}/auth/callback`,
       },
     });

@@ -11,6 +11,27 @@ export type ImportStatus =
   | "needs_review"
   | "approved"
   | "failed";
+export type MenuImportJobStatus =
+  | "uploaded"
+  | "ocr_processing"
+  | "ai_processing"
+  | "review_ready"
+  | "failed"
+  | "cancelled";
+export type ImportWarningSeverity = "critical" | "non_critical";
+export type ImportWarningStatus = "open" | "resolved" | "accepted";
+export type ImportWarningTargetType =
+  | "draft"
+  | "category"
+  | "item"
+  | "option_group"
+  | "option_value";
+export type MenuDraftStatus =
+  | "draft"
+  | "review_ready"
+  | "ready_to_publish"
+  | "published"
+  | "archived";
 export type OrderStatus =
   | "new"
   | "accepted"
@@ -35,6 +56,7 @@ export interface StaffAssignment {
   restaurantId: string;
   locationId: string;
   role: StaffRole;
+  isActive?: boolean;
   restaurantName: string;
   locationName: string;
   currency: string;
@@ -116,10 +138,12 @@ export interface MenuSection {
 
 export interface Menu {
   id: string;
+  restaurantId?: string | null;
   locationId: string;
   title: string;
   status: MenuStatus;
   publishedAt: string | null;
+  currentVersion?: number;
   sections: MenuSection[];
 }
 
@@ -190,6 +214,83 @@ export interface MenuImportDraft {
   confidenceSummary: string[];
   errorMessage: string | null;
   menu: Menu;
+}
+
+export interface MenuImportJob {
+  id: string;
+  restaurantId: string;
+  locationId: string;
+  uploadedByAccountId?: string | null;
+  sourceFilePath: string;
+  sourceFileName: string;
+  sourceFileType: "pdf" | "png" | "jpg" | "jpeg" | "webp";
+  sourceFileSize: number;
+  status: MenuImportJobStatus;
+  ocrText: string;
+  ocrConfidenceSummary: Record<string, unknown>;
+  aiPromptVersion: string;
+  aiModel: string;
+  aiResourceReference: string;
+  aiResponseSummary: Record<string, unknown>;
+  failureReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string | null;
+}
+
+export interface ImportWarning {
+  id: string;
+  menuImportJobId: string;
+  menuDraftId?: string | null;
+  targetType: ImportWarningTargetType;
+  targetId?: string | null;
+  severity: ImportWarningSeverity;
+  fieldName: string;
+  message: string;
+  sourceExcerpt: string;
+  status: ImportWarningStatus;
+  createdAt: string;
+  resolvedByAccountId?: string | null;
+  resolvedAt?: string | null;
+}
+
+export interface MenuDraftVersion {
+  id: string;
+  menuDraftId: string;
+  versionNumber: number;
+  changeSummary: string;
+  changedByAccountId?: string | null;
+  createdAt: string;
+}
+
+export interface PublishedMenuSnapshot {
+  id: string;
+  restaurantId: string;
+  locationId: string;
+  menuDraftId: string;
+  menuDraftVersion: number;
+  publishedByAccountId?: string | null;
+  publishedAt: string;
+  isCurrent: boolean;
+  snapshotPayload: Menu;
+}
+
+export interface StableTableLink {
+  tableId: string;
+  locationId: string;
+  tableLabel: string;
+  tokenHint?: string | null;
+  customerUrl: string;
+  isActive: boolean;
+}
+
+export interface OrderStatusEvent {
+  id: string;
+  orderId: string;
+  fromStatus: OrderStatus | null;
+  toStatus: OrderStatus;
+  changedByAccountId?: string | null;
+  createdAt: string;
 }
 
 export interface OperationalSummary {

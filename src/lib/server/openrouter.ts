@@ -12,6 +12,34 @@ export interface OpenRouterResult {
   metadata: Record<string, unknown>;
 }
 
+export interface AiMenuDraftItem {
+  name: string;
+  description?: string;
+  price?: number;
+  currency?: string;
+  available?: boolean;
+  warnings?: string[];
+}
+
+export interface AiMenuDraftCategory {
+  name: string;
+  description?: string;
+  items: AiMenuDraftItem[];
+}
+
+export interface AiMenuDraftWarning {
+  severity: "critical" | "non_critical";
+  fieldName: string;
+  message: string;
+  sourceExcerpt?: string;
+}
+
+export interface AiMenuDraftResponse {
+  categories: AiMenuDraftCategory[];
+  warnings: AiMenuDraftWarning[];
+  summary: string;
+}
+
 function getConfig() {
   return {
     apiKey: env.OPENROUTER_API_KEY,
@@ -85,4 +113,56 @@ export async function createChatCompletion(
   } finally {
     clearTimeout(timeout);
   }
+}
+
+export function sanitizeProviderMetadata(metadata: Record<string, unknown>) {
+  const { apiKey: _apiKey, authorization: _authorization, ...safe } = metadata;
+  return safe;
+}
+
+export function validateAiMenuDraftResponse(
+  value: unknown,
+): AiMenuDraftResponse {
+  if (!value || typeof value !== "object") {
+    throw new Error("AI menu draft response must be an object.");
+  }
+  const candidate = value as Partial<AiMenuDraftResponse>;
+  if (!Array.isArray(candidate.categories)) {
+    throw new Error("AI menu draft response must include categories.");
+  }
+  if (!Array.isArray(candidate.warnings)) {
+    throw new Error("AI menu draft response must include warnings.");
+  }
+  for (const category of candidate.categories) {
+    if (!category || typeof category.name !== "string") {
+      throw new Error("Each category needs a name.");
+    }
+    if (!Array.isArray(category.items)) {
+      throw new Error("Each category needs items.");
+    }
+    for (const item of category.items) {
+      if (!item || typeof item.name !== "string") {
+        throw new Error("Each item needs a name.");
+      }
+      if (item.price !== undefined && typeof item.price !== "number") {
+        throw new Error("Item price must be numeric when present.");
+      }
+    }
+  }
+  for (const warning of candidate.warnings) {
+    if (
+      warning.severity !== "critical" &&
+      warning.severity !== "non_critical"
+    ) {
+      throw new Error("Import warning severity is invalid.");
+    }
+    if (!warning.message || !warning.fieldName) {
+      throw new Error("Import warnings need message and fieldName.");
+    }
+  }
+  return {
+    categories: candidate.categories,
+    warnings: candidate.warnings,
+    summary: String(candidate.summary ?? ""),
+  };
 }
