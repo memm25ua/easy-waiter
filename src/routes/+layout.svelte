@@ -1,9 +1,14 @@
 <script lang="ts">
   import '../app.css';
   import LanguageSelector from '$lib/components/shared/LanguageSelector.svelte';
+  import { onMount } from 'svelte';
 
   let { children, data } = $props();
   const d = $derived(data.dictionary);
+
+  onMount(() => {
+    document.body.dataset.hydrated = 'true';
+  });
 </script>
 
 <svelte:head>

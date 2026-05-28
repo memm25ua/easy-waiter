@@ -14,7 +14,7 @@
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
     "test:rls": "vitest run tests/rls",
-    "test:e2e": "playwright test",
+    "test:e2e": "node --env-file=.env node_modules/@playwright/test/cli.js test",
     "test:smoke": "playwright test tests/e2e/production-smoke.spec.ts",
     "validate:deployment": "npm run check && npm run test:unit && npm run test:integration && npm run test:rls && npm run build"
   },

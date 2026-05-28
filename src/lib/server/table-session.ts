@@ -290,9 +290,11 @@ export async function getTableOrderingContext(sessionCode: string) {
   }
 
   const session = await getTableSession(sessionCode);
+  if (!session)
+    return { session: null, menu: null, orders: [], blockedReason: "invalid_link" };
   const isExpired =
-    session?.expiresAt && new Date(session.expiresAt).getTime() <= Date.now();
-  if (!session || session.status !== "active" || isExpired)
+    session.expiresAt && new Date(session.expiresAt).getTime() <= Date.now();
+  if (session.status !== "active" || isExpired)
     return { session, menu: null, orders: [], blockedReason: "closed_session" };
   const [menu, orders] = await Promise.all([
     getPublishedMenu(session.locationId),

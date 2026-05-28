@@ -8,6 +8,6 @@ test.skip(
 test("blocks another restaurant account", async ({ page }) => {
   await page.goto("/manager/menus/not-owned");
   await expect(
-    page.getByText(/Menu not found|Access needed|Sign in/),
+    page.getByText(/Menu not found|Access needed|Sign in/).first(),
   ).toBeVisible();
 });

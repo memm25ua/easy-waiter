@@ -215,7 +215,7 @@ each user story phase and ensure they fail for the missing behavior.
 - [x] T095 [P] Run integration tests and fix regressions in tests/integration/
 - [x] T096 [P] Run RLS tests and fix policy regressions in tests/rls/
 - [x] T097 Run Playwright e2e suite and fix role-complete journey regressions in tests/e2e/
-- [ ] T098 Validate responsive manager/customer/staff UI against DESIGN.md in src/routes/manager/ and src/routes/table/[sessionCode]/
+- [x] T098 Validate responsive manager/customer/staff UI against DESIGN.md in src/routes/manager/ and src/routes/table/[sessionCode]/
 - [x] T099 Validate quickstart manual smoke path and update any stale instructions in specs/003-complete-app-workflows/quickstart.md
 - [x] T100 Update deployment and smoke-test documentation for complete workflows in docs/deployment.md and docs/smoke-tests.md
 
