@@ -1,5 +1,8 @@
 <script lang="ts">
+  import { enhance } from "$app/forms";
+
   let { data, form } = $props();
+  let isUploading = $state(false);
   const d = $derived(data.dictionary);
 </script>
 
@@ -13,6 +16,16 @@
     action="?/upload"
     enctype="multipart/form-data"
     class="ew-panel p-4"
+    use:enhance={() => {
+      isUploading = true;
+      return async ({ update }) => {
+        try {
+          await update();
+        } finally {
+          isUploading = false;
+        }
+      };
+    }}
   >
     <label class="block text-sm font-medium" for="menuFile"
       >{d["menus.upload"]}</label
@@ -25,9 +38,20 @@
         type="file"
         accept="application/pdf,image/*"
         class="ew-input"
+        disabled={isUploading}
       />
-      <button class="ew-button-primary">{d["menus.createDraft"]}</button>
+      <button class="ew-button-primary" disabled={isUploading}
+        >{isUploading ? d["menus.importing"] : d["menus.createDraft"]}</button
+      >
     </div>
+    {#if isUploading}
+      <div
+        class="mt-3 rounded-md border border-[var(--ew-hairline)] px-3 py-2 text-sm"
+      >
+        <p class="font-medium">{d["menus.importing"]}</p>
+        <p class="ew-muted mt-1">{d["menus.importingHelp"]}</p>
+      </div>
+    {/if}
     {#if form?.message}<p class="ew-alert-error mt-3 px-3 py-2 text-sm">
         {form.message}
       </p>{/if}

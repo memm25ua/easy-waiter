@@ -136,6 +136,9 @@ const en = {
   "menus.uploadHelp":
     "Upload a PDF or image. We will extract text and create a draft for review.",
   "menus.createDraft": "Create draft",
+  "menus.importing": "Creating draft",
+  "menus.importingHelp":
+    "Uploading the file, extracting text, and building an editable menu draft. This can take up to a minute for long PDFs.",
   "menus.processing": "Import processing",
   "menus.ocrSummary": "Extracted text summary",
   "menus.importFailed": "Menu import could not be completed.",

@@ -47,6 +47,20 @@ export interface MenuOcrResult {
   confidenceSummary: Record<string, unknown>;
 }
 
+function logImport(
+  level: "info" | "warn" | "error",
+  event: string,
+  details: Record<string, unknown>,
+) {
+  console[level](
+    JSON.stringify({
+      area: "menu-import",
+      event,
+      ...details,
+    }),
+  );
+}
+
 export function validateMenuImportFile(input: {
   name: string;
   type: string;
@@ -134,6 +148,12 @@ export async function runMenuOcr(input: {
     throw new Error("SUPABASE_SERVICE_ROLE_KEY is required for OCR.");
   }
 
+  logImport("info", "ocr.invoke.start", {
+    menuImportJobId: input.menuImportJobId,
+    restaurantId: input.restaurantId,
+    locationId: input.locationId,
+    locale: input.locale,
+  });
   const response = await fetch(getSupabaseFunctionUrl("menu-ocr"), {
     method: "POST",
     headers: {
@@ -156,6 +176,11 @@ export async function runMenuOcr(input: {
     error?: string;
   };
   if (!response.ok || payload.status === "failed") {
+    logImport("error", "ocr.invoke.failed", {
+      menuImportJobId: input.menuImportJobId,
+      status: response.status,
+      message: payload.message ?? payload.error,
+    });
     throw new Error(
       payload.message ??
         payload.error ??
@@ -164,8 +189,18 @@ export async function runMenuOcr(input: {
   }
   const text = normalizeOcrText(String(payload.text ?? ""));
   if (!text) {
+    logImport("error", "ocr.invoke.empty_text", {
+      menuImportJobId: input.menuImportJobId,
+      status: response.status,
+    });
     throw new Error("Menu text extraction did not find readable text.");
   }
+  logImport("info", "ocr.invoke.success", {
+    menuImportJobId: input.menuImportJobId,
+    status: response.status,
+    textLength: text.length,
+    confidenceSummary: payload.confidenceSummary ?? {},
+  });
   return {
     text,
     confidenceSummary: payload.confidenceSummary ?? {},
@@ -194,6 +229,14 @@ export async function createMenuImportJob(input: {
   const validationMessage = validateMenuImportFile(input.file);
   if (validationMessage) throw new Error(validationMessage);
 
+  logImport("info", "job.create.start", {
+    restaurantId: input.staff.restaurantId,
+    locationId: input.staff.locationId,
+    staffId: input.staff.id,
+    fileName: input.file.name,
+    fileType: input.file.type,
+    fileSize: input.file.size,
+  });
   const client = createServiceRoleClient();
   const { data: importRow, error: importError } = await client
     .from("menu_imports")
@@ -223,6 +266,12 @@ export async function createMenuImportJob(input: {
     body: await input.file.arrayBuffer(),
     contentType: input.file.type,
   });
+  logImport("info", "job.storage.uploaded", {
+    menuImportJobId: importRow.id,
+    fileName: input.file.name,
+    fileType: input.file.type,
+    fileSize: input.file.size,
+  });
 
   const { data, error } = await client
     .from("menu_imports")
@@ -231,6 +280,10 @@ export async function createMenuImportJob(input: {
     .select("id,source_file_path,status")
     .single();
   if (error) throw error;
+  logImport("info", "job.create.success", {
+    menuImportJobId: data.id,
+    status: data.status,
+  });
   return data;
 }
 
@@ -246,6 +299,13 @@ export async function processMenuImportJob(input: {
   message: string;
 }> {
   const client = createServiceRoleClient();
+  logImport("info", "job.process.start", {
+    menuImportJobId: input.menuImportJobId,
+    restaurantId: input.restaurantId,
+    locationId: input.locationId,
+    targetCurrency: input.targetCurrency,
+    locale: input.locale,
+  });
   const { data: job, error: loadError } = await client
     .from("menu_imports")
     .select("id,source_file_path,source_file_name,source_file_type")
@@ -290,12 +350,32 @@ export async function processMenuImportJob(input: {
     if (processingError) throw processingError;
 
     const provider = await createChatCompletion(messages);
+    logImport(
+      provider.providerStatus === "success" ? "info" : "error",
+      "ai.provider.result",
+      {
+        menuImportJobId: input.menuImportJobId,
+        providerStatus: provider.providerStatus,
+        model: provider.model,
+        metadata: sanitizeProviderMetadata(provider.metadata),
+        contentLength: provider.content.length,
+      },
+    );
     if (provider.providerStatus !== "success") {
-      throw new Error("AI menu extraction is unavailable right now.");
+      throw new Error(
+        provider.providerStatus === "timeout"
+          ? "AI menu extraction is taking longer than expected. Try again in a moment."
+          : "AI menu extraction is unavailable right now.",
+      );
     }
     const draft = validateAiMenuDraftResponse(
       parseJsonObjectFromModelContent(provider.content),
     );
+    logImport("info", "ai.schema.valid", {
+      menuImportJobId: input.menuImportJobId,
+      categories: draft.categories.length,
+      warnings: draft.warnings.length,
+    });
     const menu = await createMenuDraftFromAiImport({
       locationId: input.locationId,
       restaurantId: input.restaurantId,
@@ -327,6 +407,12 @@ export async function processMenuImportJob(input: {
       })
       .eq("id", input.menuImportJobId);
     if (completeError) throw completeError;
+    logImport("info", "job.process.success", {
+      menuImportJobId: input.menuImportJobId,
+      menuId: menu.id,
+      categories: draft.categories.length,
+      warnings: draft.warnings.length,
+    });
     return {
       status: "review_ready",
       menuId: menu.id,
@@ -338,6 +424,10 @@ export async function processMenuImportJob(input: {
         ? error.message
         : "Menu import could not be completed.";
     await markMenuImportFailed({
+      menuImportJobId: input.menuImportJobId,
+      message,
+    });
+    logImport("error", "job.process.failed", {
       menuImportJobId: input.menuImportJobId,
       message,
     });

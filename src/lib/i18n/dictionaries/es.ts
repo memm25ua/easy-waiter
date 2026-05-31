@@ -136,6 +136,9 @@ const es = {
   "menus.uploadHelp":
     "Sube un PDF o una imagen. Extraeremos el texto y crearemos un borrador para revisar.",
   "menus.createDraft": "Crear borrador",
+  "menus.importing": "Creando borrador",
+  "menus.importingHelp":
+    "Subiendo el archivo, extrayendo el texto y creando un menú editable. Puede tardar hasta un minuto en PDFs largos.",
   "menus.processing": "Importación en proceso",
   "menus.ocrSummary": "Resumen del texto extraído",
   "menus.importFailed": "No se pudo completar la importación del menú.",
