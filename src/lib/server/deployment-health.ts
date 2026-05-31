@@ -69,6 +69,23 @@ function checkValues(
   };
 }
 
+function checkOcrProvider(locale: SupportedLocale = "en"): DeploymentCheck {
+  const provider = privateEnv.OCR_PROVIDER ?? "mistral";
+  const required =
+    provider === "generic-http"
+      ? ["OCR_PROVIDER", "OCR_ENDPOINT", "OCR_API_KEY"]
+      : ["OCR_PROVIDER", "OCR_API_KEY"];
+  const missing = required.filter((key) => !privateEnv[key]);
+  return {
+    name: "OCR provider",
+    ok: missing.length === 0 && ["mistral", "generic-http"].includes(provider),
+    detail:
+      missing.length === 0
+        ? `${t(locale, "health.configured")} (${provider})`
+        : `missing ${missing.length} required value${missing.length === 1 ? "" : "s"}`,
+  };
+}
+
 export function evaluateDeploymentHealth(
   locale: SupportedLocale = "en",
 ): DeploymentHealth {
@@ -102,9 +119,16 @@ export function evaluateDeploymentHealth(
       ).startsWith("https://"),
       detail: "configured",
     },
+    checkOcrProvider(locale),
     {
       name: t(locale, "health.completeWorkflows"),
-      ok: Boolean(privateEnv.SUPABASE_SERVICE_ROLE_KEY),
+      ok: Boolean(
+        privateEnv.SUPABASE_SERVICE_ROLE_KEY &&
+        privateEnv.OPENROUTER_API_KEY &&
+        privateEnv.OCR_PROVIDER &&
+        privateEnv.OCR_API_KEY &&
+        (privateEnv.OCR_PROVIDER !== "generic-http" || privateEnv.OCR_ENDPOINT),
+      ),
       detail: "menu import, table links, customer orders, and staff updates",
     },
   ];

@@ -291,7 +291,12 @@ export async function getTableOrderingContext(sessionCode: string) {
 
   const session = await getTableSession(sessionCode);
   if (!session)
-    return { session: null, menu: null, orders: [], blockedReason: "invalid_link" };
+    return {
+      session: null,
+      menu: null,
+      orders: [],
+      blockedReason: "invalid_link",
+    };
   const isExpired =
     session.expiresAt && new Date(session.expiresAt).getTime() <= Date.now();
   if (session.status !== "active" || isExpired)

@@ -8,24 +8,58 @@ SvelteKit Node adapter.
 Configure `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY`,
 `SUPABASE_SERVICE_ROLE_KEY`, `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`,
 `OPENROUTER_BASE_URL`, `PUBLIC_APP_URL`, `DEPLOYMENT_ENVIRONMENT`,
-`COOLIFY_APP_URL`, `COOLIFY_PROJECT_ID`, `COOLIFY_SERVICE_ID`, and
-`SMOKE_TEST_OPERATOR_TOKEN` in Coolify. Public values may be exposed to the
-browser; service-role, OpenRouter, and smoke-test values must remain
-server-only.
+`BODY_SIZE_LIMIT`, `COOLIFY_APP_URL`, `COOLIFY_PROJECT_ID`,
+`COOLIFY_SERVICE_ID`, and `SMOKE_TEST_OPERATOR_TOKEN` in Coolify. Public values
+may be exposed to the browser; service-role, OpenRouter, and smoke-test values
+must remain server-only. Set `BODY_SIZE_LIMIT` to at least `15728640` so the
+15 MB menu import limit can reach server-side validation.
 
-Menu PDF/image import also requires server-only OCR and AI import-agent
-configuration. Set `OCR_PROVIDER`, `OCR_ENDPOINT`, and `OCR_API_KEY` when an
-external OCR provider is used. The AI import agent uses the same server-side
-OpenRouter credentials as the AI waiter, but import processing must pass both
-the tenant-scoped uploaded resource reference and persisted OCR text. Never
-expose OCR provider keys, OpenRouter keys, uploaded menu resource paths, or OCR
-text in public runtime variables.
+Menu PDF/image import also requires the `menu-ocr` Supabase Edge Function and
+server-only OCR settings. Set `OCR_PROVIDER=mistral` and `OCR_API_KEY` as
+Supabase function secrets for the default Mistral OCR integration. The function
+passes short-lived signed Supabase Storage URLs to Mistral OCR and persists only
+the extracted text plus safe confidence metadata.
+
+The OCR function also supports `OCR_PROVIDER=generic-http` for a custom OCR
+proxy. In that mode, set `OCR_ENDPOINT` and `OCR_API_KEY`; the endpoint must
+accept:
+
+```json
+{
+  "sourceUrl": "short-lived signed menu source URL",
+  "mimeType": "application/pdf",
+  "fileName": "menu.pdf",
+  "locale": "en"
+}
+```
+
+and return:
+
+```json
+{
+  "text": "extracted OCR text",
+  "confidenceSummary": { "average": 0.91, "pageCount": 2, "warnings": [] }
+}
+```
+
+The AI import agent uses the same server-side OpenRouter credentials as the AI
+waiter, but import processing must pass both the tenant-scoped uploaded
+resource reference and persisted OCR text. Never expose OCR provider keys,
+OpenRouter keys, uploaded menu resource paths, signed URLs, or OCR text in
+public runtime variables.
 
 ## Database
 
 Apply Supabase migrations, reset local seed data only in disposable
 environments, enable RLS, and verify storage policies for menu imports before
 accepting real restaurant data.
+
+Deploy the OCR function after setting secrets:
+
+```bash
+supabase secrets set OCR_PROVIDER=mistral OCR_API_KEY=...
+supabase functions deploy menu-ocr
+```
 
 Before launch, verify that menu source files are stored in tenant-scoped
 storage, OCR text is persisted only in tenant-owned records, critical import

@@ -1,4 +1,12 @@
-import { getManagerMenu } from "./menu";
+import { env as privateEnv } from "$env/dynamic/private";
+import { env as publicEnv } from "$env/dynamic/public";
+import { createMenuDraftFromAiImport, getManagerMenu } from "./menu";
+import {
+  createChatCompletion,
+  parseJsonObjectFromModelContent,
+  sanitizeProviderMetadata,
+  validateAiMenuDraftResponse,
+} from "./openrouter";
 import {
   buildMenuImportResourcePath,
   createMenuImportResourceReference,
@@ -32,6 +40,12 @@ export const SUPPORTED_MENU_IMPORT_TYPES = [
 ];
 
 const MAX_MENU_IMPORT_BYTES = 15 * 1024 * 1024;
+const IMPORT_PROMPT_VERSION = "2026-05-26";
+
+export interface MenuOcrResult {
+  text: string;
+  confidenceSummary: Record<string, unknown>;
+}
 
 export function validateMenuImportFile(input: {
   name: string;
@@ -82,7 +96,7 @@ export function buildMenuImportAgentMessages(input: MenuImportAgentInput) {
     {
       role: "system" as const,
       content:
-        "Convert a restaurant menu source into strict JSON. Use only the uploaded resource and OCR text. Return categories, items, option groups, option values, warnings, and summary. Mark ordering-critical uncertainty as critical.",
+        "Convert a restaurant menu source into strict JSON. Use only the uploaded resource and OCR text. Return categories with items. Each item may include optionGroups with values for modifiers or choices. Return warnings and summary. Prices and priceDelta values must be minor currency units when possible. Mark ordering-critical uncertainty as critical.",
     },
     {
       role: "user" as const,
@@ -101,6 +115,78 @@ export function buildMenuImportAgentMessages(input: MenuImportAgentInput) {
   ];
 }
 
+function getSupabaseFunctionUrl(functionName: string) {
+  const supabaseUrl = publicEnv.PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
+  if (!supabaseUrl) {
+    throw new Error("Supabase URL is required for menu import processing.");
+  }
+  return `${supabaseUrl}/functions/v1/${functionName}`;
+}
+
+export async function runMenuOcr(input: {
+  menuImportJobId: string;
+  restaurantId: string;
+  locationId: string;
+  locale: SupportedLocale;
+}): Promise<MenuOcrResult> {
+  const serviceRoleKey = privateEnv.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is required for OCR.");
+  }
+
+  const response = await fetch(getSupabaseFunctionUrl("menu-ocr"), {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${serviceRoleKey}`,
+      apikey: serviceRoleKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      menuImportJobId: input.menuImportJobId,
+      restaurantId: input.restaurantId,
+      locationId: input.locationId,
+      locale: input.locale,
+    }),
+  });
+  const payload = (await response.json().catch(() => ({}))) as {
+    status?: string;
+    text?: string;
+    confidenceSummary?: Record<string, unknown>;
+    message?: string;
+    error?: string;
+  };
+  if (!response.ok || payload.status === "failed") {
+    throw new Error(
+      payload.message ??
+        payload.error ??
+        "Menu text extraction could not be completed.",
+    );
+  }
+  const text = normalizeOcrText(String(payload.text ?? ""));
+  if (!text) {
+    throw new Error("Menu text extraction did not find readable text.");
+  }
+  return {
+    text,
+    confidenceSummary: payload.confidenceSummary ?? {},
+  };
+}
+
+async function markMenuImportFailed(input: {
+  menuImportJobId: string;
+  message: string;
+}) {
+  const { error } = await createServiceRoleClient()
+    .from("menu_imports")
+    .update({
+      status: "failed",
+      error_message: input.message,
+      completed_at: new Date().toISOString(),
+    })
+    .eq("id", input.menuImportJobId);
+  if (error) throw error;
+}
+
 export async function createMenuImportJob(input: {
   staff: StaffAssignment;
   file: File;
@@ -117,7 +203,7 @@ export async function createMenuImportJob(input: {
       uploaded_by: input.staff.id,
       source_file_path: "pending",
       source_file_name: input.file.name,
-      source_file_type: input.file.name.split(".").pop()?.toLowerCase() ?? "",
+      source_file_type: input.file.type,
       source_file_size: input.file.size,
       status: "uploaded",
     })
@@ -152,50 +238,111 @@ export async function processMenuImportJob(input: {
   menuImportJobId: string;
   restaurantId: string;
   locationId: string;
-  ocrText: string;
-  ocrConfidenceSummary?: Record<string, unknown>;
   targetCurrency: string;
   locale: SupportedLocale;
-}) {
+}): Promise<{
+  status: "review_ready" | "failed";
+  menuId?: string;
+  message: string;
+}> {
   const client = createServiceRoleClient();
-  const normalizedOcrText = normalizeOcrText(input.ocrText);
   const { data: job, error: loadError } = await client
     .from("menu_imports")
-    .select("id,source_file_path")
+    .select("id,source_file_path,source_file_name,source_file_type")
     .eq("id", input.menuImportJobId)
     .eq("restaurant_id", input.restaurantId)
     .eq("location_id", input.locationId)
     .single();
   if (loadError) throw loadError;
 
-  const resourceReference = await createMenuImportResourceReference(
-    job.source_file_path,
-  );
-  const messages = buildMenuImportAgentMessages({
-    restaurantId: input.restaurantId,
-    locationId: input.locationId,
-    sourceResourceReference: resourceReference,
-    ocrText: normalizedOcrText,
-    ocrConfidenceSummary: input.ocrConfidenceSummary ?? {},
-    targetCurrency: input.targetCurrency,
-    locale: input.locale,
-    expectedSchemaVersion: "menu-import-v1",
-    promptVersion: "2026-05-26",
-  });
+  try {
+    const ocr = await runMenuOcr({
+      menuImportJobId: input.menuImportJobId,
+      restaurantId: input.restaurantId,
+      locationId: input.locationId,
+      locale: input.locale,
+    });
+    const resourceReference = await createMenuImportResourceReference(
+      job.source_file_path,
+    );
+    const messages = buildMenuImportAgentMessages({
+      restaurantId: input.restaurantId,
+      locationId: input.locationId,
+      sourceResourceReference: resourceReference,
+      ocrText: ocr.text,
+      ocrConfidenceSummary: ocr.confidenceSummary,
+      targetCurrency: input.targetCurrency,
+      locale: input.locale,
+      expectedSchemaVersion: "menu-import-v1",
+      promptVersion: IMPORT_PROMPT_VERSION,
+    });
 
-  const { error } = await client
-    .from("menu_imports")
-    .update({
-      status: "ai_processing",
-      ocr_text: normalizedOcrText,
-      ocr_confidence_summary: input.ocrConfidenceSummary ?? {},
-      ai_resource_reference: resourceReference,
-      ai_prompt_version: "2026-05-26",
-    })
-    .eq("id", input.menuImportJobId);
-  if (error) throw error;
+    const { error: processingError } = await client
+      .from("menu_imports")
+      .update({
+        status: "ai_processing",
+        ocr_text: ocr.text,
+        ocr_confidence_summary: ocr.confidenceSummary,
+        ai_resource_reference: resourceReference,
+        ai_prompt_version: IMPORT_PROMPT_VERSION,
+      })
+      .eq("id", input.menuImportJobId);
+    if (processingError) throw processingError;
 
-  return { messages, resourceReference, ocrText: normalizedOcrText };
+    const provider = await createChatCompletion(messages);
+    if (provider.providerStatus !== "success") {
+      throw new Error("AI menu extraction is unavailable right now.");
+    }
+    const draft = validateAiMenuDraftResponse(
+      parseJsonObjectFromModelContent(provider.content),
+    );
+    const menu = await createMenuDraftFromAiImport({
+      locationId: input.locationId,
+      restaurantId: input.restaurantId,
+      importJobId: input.menuImportJobId,
+      title: job.source_file_name
+        ? job.source_file_name.replace(/\.[^.]+$/, "")
+        : "Imported menu",
+      currency: input.targetCurrency,
+      draft,
+    });
+    const safeMetadata = sanitizeProviderMetadata(provider.metadata);
+    const { error: completeError } = await client
+      .from("menu_imports")
+      .update({
+        status: "review_ready",
+        ai_model: provider.model,
+        ai_response_summary: {
+          providerStatus: provider.providerStatus,
+          metadata: safeMetadata,
+          summary: draft.summary,
+          categories: draft.categories.length,
+          warnings: draft.warnings.length,
+        },
+        confidence_summary: [
+          draft.summary || "Review imported menu before publishing.",
+        ],
+        completed_at: new Date().toISOString(),
+        error_message: null,
+      })
+      .eq("id", input.menuImportJobId);
+    if (completeError) throw completeError;
+    return {
+      status: "review_ready",
+      menuId: menu.id,
+      message: "Menu draft is ready for review.",
+    };
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Menu import could not be completed.";
+    await markMenuImportFailed({
+      menuImportJobId: input.menuImportJobId,
+      message,
+    });
+    return { status: "failed", message };
+  }
 }
 
 export async function createMenuImport(

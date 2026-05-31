@@ -18,7 +18,22 @@ export interface AiMenuDraftItem {
   price?: number;
   currency?: string;
   available?: boolean;
+  optionGroups?: AiMenuDraftOptionGroup[];
   warnings?: string[];
+}
+
+export interface AiMenuDraftOptionValue {
+  name: string;
+  priceDelta?: number;
+  available?: boolean;
+}
+
+export interface AiMenuDraftOptionGroup {
+  name: string;
+  required?: boolean;
+  minChoices?: number;
+  maxChoices?: number;
+  values: AiMenuDraftOptionValue[];
 }
 
 export interface AiMenuDraftCategory {
@@ -120,6 +135,22 @@ export function sanitizeProviderMetadata(metadata: Record<string, unknown>) {
   return safe;
 }
 
+export function parseJsonObjectFromModelContent(content: string): unknown {
+  const trimmed = content.trim();
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  const candidate = fenced?.[1]?.trim() ?? trimmed;
+  try {
+    return JSON.parse(candidate);
+  } catch {
+    const start = candidate.indexOf("{");
+    const end = candidate.lastIndexOf("}");
+    if (start >= 0 && end > start) {
+      return JSON.parse(candidate.slice(start, end + 1));
+    }
+    throw new Error("AI menu draft response was not valid JSON.");
+  }
+}
+
 export function validateAiMenuDraftResponse(
   value: unknown,
 ): AiMenuDraftResponse {
@@ -146,6 +177,30 @@ export function validateAiMenuDraftResponse(
       }
       if (item.price !== undefined && typeof item.price !== "number") {
         throw new Error("Item price must be numeric when present.");
+      }
+      if (item.optionGroups !== undefined) {
+        if (!Array.isArray(item.optionGroups)) {
+          throw new Error("Item option groups must be an array.");
+        }
+        for (const optionGroup of item.optionGroups) {
+          if (!optionGroup || typeof optionGroup.name !== "string") {
+            throw new Error("Each option group needs a name.");
+          }
+          if (!Array.isArray(optionGroup.values)) {
+            throw new Error("Each option group needs choices.");
+          }
+          for (const value of optionGroup.values) {
+            if (!value || typeof value.name !== "string") {
+              throw new Error("Each option choice needs a name.");
+            }
+            if (
+              value.priceDelta !== undefined &&
+              typeof value.priceDelta !== "number"
+            ) {
+              throw new Error("Option choice price delta must be numeric.");
+            }
+          }
+        }
       }
     }
   }

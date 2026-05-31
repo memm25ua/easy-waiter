@@ -10,6 +10,8 @@ Run these checks after every staging or production deployment.
 4. Upload a representative PDF or image from `/manager/menus` and verify the
    import stores the source resource, extracts OCR text, and creates a
    reviewable AI-generated draft.
+   If extraction fails, verify the import is marked failed with manual-entry
+   fallback copy and no provider secret or signed source URL in the page HTML.
 5. Resolve critical import warnings, leave a non-critical warning visible, and
    verify publication is allowed only after owner/manager review.
 6. Publish a menu from `/manager/menus`.

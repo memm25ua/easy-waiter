@@ -15,10 +15,16 @@ test("staff board shows needs-attention lane", async ({ page }) => {
   const firstOrderCard = newColumn.locator("article").first();
 
   // Select "needs attention" in the dropdown and click Update
-  await firstOrderCard.locator('select[name="status"]').selectOption({ label: "needs attention" });
+  await firstOrderCard
+    .locator('select[name="status"]')
+    .selectOption({ label: "needs attention" });
   await firstOrderCard.getByRole("button", { name: "Update" }).click();
 
   // Verify the order moves to 'Needs attention' column and shows 'Review reason'
-  const needsAttentionColumn = page.locator("section").filter({ hasText: "Needs attention" });
-  await expect(needsAttentionColumn.getByText("Review reason").first()).toBeVisible();
+  const needsAttentionColumn = page
+    .locator("section")
+    .filter({ hasText: "Needs attention" });
+  await expect(
+    needsAttentionColumn.getByText("Review reason").first(),
+  ).toBeVisible();
 });

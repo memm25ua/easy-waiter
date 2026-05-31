@@ -809,6 +809,14 @@ export async function setItemAvailability(
   return updated;
 }
 
+function normalizeImportedPrice(value: number | undefined) {
+  if (value === undefined || !Number.isFinite(value)) return 0;
+  if (!Number.isInteger(value) || Math.abs(value) < 100) {
+    return Math.round(value * 100);
+  }
+  return Math.round(value);
+}
+
 export async function createMenuDraftFromAiImport(input: {
   locationId: string;
   restaurantId: string;
@@ -846,17 +854,58 @@ export async function createMenuDraftFromAiImport(input: {
     if (sectionError) throw sectionError;
 
     for (const [itemIndex, item] of category.items.entries()) {
-      const { error: itemError } = await client.from("menu_items").insert({
-        section_id: sectionRow.id,
-        name: item.name,
-        description: item.description ?? "",
-        price: item.price ?? 0,
-        currency: item.currency ?? input.currency,
-        is_available: item.available ?? true,
-        sort_order: itemIndex,
-        confidence_flags: item.warnings ?? [],
-      });
+      const { data: itemRow, error: itemError } = await client
+        .from("menu_items")
+        .insert({
+          section_id: sectionRow.id,
+          name: item.name,
+          description: item.description ?? "",
+          price: normalizeImportedPrice(item.price),
+          currency: item.currency ?? input.currency,
+          is_available: item.available ?? true,
+          sort_order: itemIndex,
+          confidence_flags: item.warnings ?? [],
+        })
+        .select("id")
+        .single();
       if (itemError) throw itemError;
+
+      for (const [optionIndex, optionGroup] of (
+        item.optionGroups ?? []
+      ).entries()) {
+        const { data: optionRow, error: optionError } = await client
+          .from("menu_item_options")
+          .insert({
+            menu_item_id: itemRow.id,
+            name: optionGroup.name,
+            is_required: optionGroup.required ?? false,
+            min_choices: optionGroup.minChoices ?? 0,
+            max_choices:
+              optionGroup.maxChoices ??
+              Math.max(
+                optionGroup.values.length,
+                optionGroup.minChoices ?? 0,
+                1,
+              ),
+            sort_order: optionIndex,
+          })
+          .select("id")
+          .single();
+        if (optionError) throw optionError;
+
+        for (const [valueIndex, value] of optionGroup.values.entries()) {
+          const { error: valueError } = await client
+            .from("menu_item_option_values")
+            .insert({
+              option_id: optionRow.id,
+              name: value.name,
+              price_delta: normalizeImportedPrice(value.priceDelta),
+              is_available: value.available ?? true,
+              sort_order: valueIndex,
+            });
+          if (valueError) throw valueError;
+        }
+      }
     }
   }
 

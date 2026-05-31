@@ -26,7 +26,9 @@ test("customer phone, staff tablet, and manager desktop layouts render and compl
   const menuHeader = await page.locator("main > section").first().boundingBox();
   const cartSection = await page.locator("aside").boundingBox();
   if (menuHeader && cartSection) {
-    expect(cartSection.y).toBeGreaterThanOrEqual(menuHeader.y + menuHeader.height);
+    expect(cartSection.y).toBeGreaterThanOrEqual(
+      menuHeader.y + menuHeader.height,
+    );
   }
 
   // Authenticate as seeded owner-a to access manager pages
@@ -51,4 +53,3 @@ test("customer phone, staff tablet, and manager desktop layouts render and compl
     expect(contentSection.x).toBeGreaterThan(asideNav.x);
   }
 });
-

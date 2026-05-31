@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   createChatCompletion,
+  parseJsonObjectFromModelContent,
   sanitizeProviderMetadata,
   validateAiMenuDraftResponse,
 } from "$lib/server/openrouter";
@@ -21,7 +22,19 @@ describe("OpenRouter adapter", () => {
       categories: [
         {
           name: "Mains",
-          items: [{ name: "Chicken Rice", price: 1450, currency: "EUR" }],
+          items: [
+            {
+              name: "Chicken Rice",
+              price: 1450,
+              currency: "EUR",
+              optionGroups: [
+                {
+                  name: "Sauce",
+                  values: [{ name: "Mojo", priceDelta: 100 }],
+                },
+              ],
+            },
+          ],
         },
       ],
       warnings: [
@@ -48,5 +61,13 @@ describe("OpenRouter adapter", () => {
         id: "completion-1",
       }),
     ).toEqual({ id: "completion-1" });
+  });
+
+  it("parses fenced JSON from model output", () => {
+    expect(
+      parseJsonObjectFromModelContent(
+        '```json\n{"categories":[],"warnings":[],"summary":"ok"}\n```',
+      ),
+    ).toEqual({ categories: [], warnings: [], summary: "ok" });
   });
 });

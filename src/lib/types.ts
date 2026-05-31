@@ -7,10 +7,14 @@ export type StaffInvitationStatus =
 export type MenuStatus = "draft" | "published" | "archived";
 export type ImportStatus =
   | "uploaded"
+  | "ocr_processing"
+  | "ai_processing"
+  | "review_ready"
   | "processing"
   | "needs_review"
   | "approved"
-  | "failed";
+  | "failed"
+  | "cancelled";
 export type MenuImportJobStatus =
   | "uploaded"
   | "ocr_processing"
